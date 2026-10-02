@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CYRUS OS — Visual Architecture</title>
+<style>
+:root{
+  --bg0:#0d0716; --bg1:#160e26; --panel:#1f1434; --panel2:#2a1c45;
+  --border:rgba(212,165,63,.22); --border2:rgba(255,255,255,.09);
+  --gold:#d4a53f; --violet:#7c4dff; --wine:#9d3b6e; --sky:#7dd3fc; --green:#34d399; --rose:#fb7185;
+  --text:#efe9f8; --muted:#a99cc4;
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:auto}
+@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{animation:none!important;transition:none!important} }
+body{
+  background:
+    radial-gradient(1100px 700px at 85% -10%, rgba(124,77,255,.16), transparent 60%),
+    radial-gradient(900px 600px at -10% 30%, rgba(212,165,63,.10), transparent 55%),
+    radial-gradient(900px 700px at 50% 115%, rgba(157,59,110,.14), transparent 60%),
+    linear-gradient(160deg, var(--bg0), var(--bg1) 55%, var(--bg0));
+  color:var(--text); font:15px/1.65 "Segoe UI", system-ui, sans-serif; min-height:100vh;
+}
+.wrap{max-width:1060px;margin:0 auto;padding:48px 22px 90px}
+header.hero{text-align:center;padding:26px 0 8px}
+.crest{
+  width:74px;height:74px;border-radius:22px;margin:0 auto 18px;display:grid;place-items:center;font-size:36px;
+  background:linear-gradient(150deg,var(--panel2),var(--panel));border:1px solid var(--border);
+  box-shadow:0 12px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+}
+h1{font-size:clamp(28px,4.6vw,44px);letter-spacing:.5px}
+h1 .gold{color:var(--gold)}
+.tagline{color:var(--muted);margin-top:10px;font-size:16.5px}
+.lede{max-width:760px;margin:26px auto 0;background:rgba(31,20,52,.72);border:1px solid var(--border2);
+  border-left:3px solid var(--gold);border-radius:14px;padding:18px 22px;text-align:left;backdrop-filter:blur(6px)}
+.lede b{color:var(--gold)}
+nav.toc{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin:28px 0 10px}
+nav.toc a{
+  color:var(--text);text-decoration:none;font-size:12.5px;padding:7px 14px;border-radius:999px;
+  background:rgba(31,20,52,.8);border:1px solid var(--border2);transition:.2s
+}
+nav.toc a:hover{border-color:var(--gold);transform:translateY(-2px)}
+section{margin-top:64px}
+.kicker{color:var(--gold);font-size:12px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700}
+h2{font-size:clamp(21px,3vw,28px);margin:8px 0 6px}
+.sub{color:var(--muted);max-width:780px;margin-bottom:24px}
+.card{background:rgba(31,20,52,.72);border:1px solid var(--border2);border-radius:16px;padding:22px;backdrop-filter:blur(6px)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+
+/* ---- layer diagram ---- */
+.stack{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.layer{
+  border-radius:13px;padding:15px 18px;border:1px solid var(--border2);position:relative;
+  display:flex;align-items:center;gap:16px;transition:transform .25s var(--spring), border-color .25s;
+  cursor:default
+}
+.layer:hover{transform:translateX(6px);border-color:var(--gold)}
+.layer .ic{font-size:26px;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.05)}
+.layer b{font-size:15.5px}
+.layer span{display:block;color:var(--muted);font-size:12.5px}
+.layer .l-tag{margin-left:auto;font-size:10.5px;letter-spacing:1.4px;padding:4px 10px;border-radius:999px;border:1px solid var(--border2);color:var(--muted);white-space:nowrap}
+.l-user{background:linear-gradient(120deg,rgba(212,165,63,.14),rgba(31,20,52,.6))}
+.l-iface{background:linear-gradient(120deg,rgba(124,77,255,.16),rgba(31,20,52,.6))}
+.l-brain{background:linear-gradient(120deg,rgba(212,165,63,.20),rgba(31,20,52,.65));border-color:var(--border)}
+.l-agents{background:linear-gradient(120deg,rgba(157,59,110,.15),rgba(31,20,52,.6))}
+.l-kernel{background:linear-gradient(120deg,rgba(125,211,252,.10),rgba(31,20,52,.6))}
+.down{text-align:center;color:var(--gold);font-size:18px;line-height:.6;padding:2px 0;opacity:.85}
+.agents-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:2px}
+.agent{background:rgba(13,7,22,.55);border:1px solid var(--border2);border-radius:12px;padding:12px;text-align:center;font-size:12.5px}
+.agent .a-ic{font-size:22px}
+.agent b{display:block;margin-top:5px;font-size:13px}
+.agent span{color:var(--muted);font-size:11.5px}
+
+/* ---- flow ---- */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin-top:6px}
+.fstep{
+  flex:1 1 130px;background:rgba(13,7,22,.55);border:1px solid var(--border2);border-radius:12px;padding:13px 12px;text-align:center;position:relative;
+  font-size:12.8px;min-width:118px
+}
+.fstep .n{width:23px;height:23px;border-radius:50%;background:var(--gold);color:#1c1206;font-weight:800;font-size:12px;display:grid;place-items:center;margin:0 auto 7px}
+.fstep small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.farrow{align-self:center;color:var(--gold);font-size:17px;flex:none}
+
+/* ---- chat demo ---- */
+.term{background:#0a0512;border:1px solid var(--border2);border-radius:14px;overflow:hidden;font-family:"Cascadia Code",Consolas,monospace;font-size:13px}
+.term-bar{background:rgba(31,20,52,.85);padding:9px 14px;display:flex;gap:7px;align-items:center;border-bottom:1px solid var(--border2)}
+.dot{width:11px;height:11px;border-radius:50%}
+.term-body{padding:16px 18px;line-height:1.8;min-height:230px}
+.p1{color:var(--gold)}.p2{color:var(--sky)}.p3{color:var(--green)}.dim{color:var(--muted)}.warn{color:var(--rose)}
+.caret{display:inline-block;width:8px;height:15px;background:var(--gold);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ---- risk table ---- */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{ text-align:left;color:var(--muted);font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;padding:9px 12px;border-bottom:1px solid var(--border2)}
+td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.4px}
+.pill.low{background:rgba(52,211,153,.14);color:var(--green);border:1px solid rgba(52,211,153,.4)}
+.pill.med{background:rgba(212,165,63,.14);color:var(--gold);border:1px solid var(--border)}
+.pill.high{background:rgba(251,113,133,.14);color:var(--rose);border:1px solid rgba(251,113,133,.4)}
+code{font-family:Consolas,monospace;font-size:12.5px;background:rgba(13,7,22,.7);padding:2px 7px;border-radius:6px;border:1px solid var(--border2);color:var(--sky)}
+
+/* ---- router lanes ---- */
+.lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:6px}
+.lane{border-radius:13px;padding:15px;border:1px solid var(--border2);background:rgba(13,7,22,.5)}
+.lane b{font-size:13.5px}
+.lane .chain{margin-top:9px;display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:11px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--border2)}
+.chip.first{background:rgba(212,165,63,.18);border-color:var(--gold);color:var(--gold);font-weight:700}
+.lane .who{color:var(--muted);font-size:11.5px;margin-top:8px}
+
+/* ---- roadmap ---- */
+.road{position:relative;margin-top:8px;padding-left:26px}
+.road:before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--gold),var(--violet))}
+.stage{position:relative;padding:0 0 22px 14px}
+.stage:before{content:"";position:absolute;left:-24px;top:5px;width:14px;height:14px;border-radius:50%;background:var(--panel2);border:2px solid var(--gold)}
+.stage.done:before{background:var(--gold)}
+.stage h4{font-size:15px}
+.stage h4 .st{font-size:10.5px;letter-spacing:1.5px;padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:2px}
+.st-done{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.4)}
+.st-now{background:rgba(212,165,63,.15);color:var(--gold);border:1px solid var(--border)}
+.st-next{background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--border2)}
+.stage p{color:var(--muted);font-size:13px;margin-top:4px;max-width:720px}
+
+/* ---- one brain two faces ---- */
+.brain-map{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:760px){ .brain-map{grid-template-columns:1fr 90px 1fr;align-items:center} }
+.face{border-radius:14px;padding:18px;border:1px solid var(--border2);background:rgba(13,7,22,.55)}
+.face h4{font-size:15px;margin-bottom:8px}
+.face ul{list-style:none;margin-top:4px}
+.face li{padding:4px 0;color:var(--muted);font-size:12.8px}
+.face li:before{content:"›";color:var(--gold);margin-right:8px;font-weight:700}
+.core{
+  border-radius:18px;padding:20px 12px;text-align:center;border:1px solid var(--gold);
+  background:linear-gradient(150deg,rgba(212,165,63,.2),rgba(31,20,52,.8));
+  box-shadow:0 0 34px rgba(212,165,63,.16)
+}
+.core b{font-size:16px}
+.core span{display:block;color:var(--muted);font-size:11.5px;margin-top:4px}
+.h-arrow{text-align:center;color:var(--gold);font-size:20px}
+@media(max-width:759px){ .h-arrow{transform:rotate(90deg)} }
+footer{margin-top:70px;text-align:center;color:var(--muted);font-size:12.5px}
+footer b{color:var(--gold)}
+.note{font-size:12px;color:var(--muted);margin-top:12px}
+.note b{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="crest">👑</div>
+  <h1>CYRUS OS — <span class="gold">Visual Architecture</span></h1>
+  <p class="tagline">One brain, two interfaces, agents underneath — how every piece connects.</p>
+  <div class="lede">
+    <b>The core idea:</b> CYRUS is an <b>AI-native operating environment</b> — you speak in <b>intent</b>, and it plans, checks permissions, acts, and verifies. The GUI and the CLI are just two windows into the <b>same brain</b>: neither contains its own intelligence, and every action funnels through one policy gate and one audit log.
+  </div>
+  <nav class="toc">
+    <a href="#layers">6 layers</a><a href="#brain">The brain</a><a href="#cli">CLI</a><a href="#gui">GUI</a>
+    <a href="#files">AI file manager</a><a href="#router">AI router</a><a href="#policy">Permissions</a><a href="#roadmap">Roadmap</a>
+  </nav>
+</header>
+
+<!-- ============ LAYERS ============ -->
+<section id="layers">
+  <div class="kicker">§1 · Architecture</div>
+  <h2>The six layers</h2>
+  <p class="sub">Requests flow down, results flow back up. The brain is the only place that understands intent — the layers below it only execute whitelisted actions.</p>
+  <div class="card">
+    <div class="stack">
+      <div class="layer l-user"><div class="ic">🧑</div><div><b>USER</b><span>Voice · text · mouse — three ways to say the same thing</span></div><div class="l-tag">INPUT</div></div>
+      <div class="down">▼</div>
+      <div class="layer l-iface"><div class="ic">🖥️</div><div><b>CYRUS INTERFACE</b><span>GUI (desktop, dock, windows) &nbsp;+&nbsp; CLI (cyrus-sh) &nbsp;+&nbsp; Voice loop</span></div><div class="l-tag">NO INTELLIGENCE HERE</div></div>
+      <div class="down">▼</div>
+      <div class="layer l-brain"><div class="ic">🧠</div><div><b>CYRUS BRAIN</b><span>Intent engine → Planner → Context → Memory (the only layer that thinks)</span></div><div class="l-tag">THE MIND</div></div>
+      <div class="down">▼</div>
+      <div class="layer l-agents">
+        <div class="ic">🤖</div>
+        <div style="flex:1"><b>AGENTS</b><span>Specialized executors — each owns a domain, all policy-gated</span>
+          <div class="agents-row">
+            <div class="agent"><div class="a-ic">🗂️</div><b>File</b><span>search · organize</span></div>
+            <div class="agent"><div class="a-ic">💻</div><b>Code</b><span>build · debug</span></div>
+            <div class="agent"><div class="a-ic">⚙️</div><b>System</b><span>CPU · disk · net</span></div>
+            <div class="agent"><div class="a-ic">🔎</div><b>Research</b><span>web · docs</span></div>
+            <div class="agent"><div class="a-ic">🛡️</div><b>Security</b><span>risk · integrity</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="down">▼</div>
+      <div class="layer l-kernel"><div class="ic">🧩</div><div><b>OS LAYER</b><span>Today: the browser sandbox + virtual filesystem · Tomorrow: a real Linux base</span></div><div class="l-tag">EXECUTION</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BRAIN ============ -->
+<section id="brain">
+  <div class="kicker">§2 · The mind</div>
+  <h2>Inside the brain: intent → plan → verify</h2>
+  <p class="sub">Every request — from the chatbot, the palette, or the terminal — is decomposed the same way. The confirmation step is not optional: the planner must never execute destructive operations blind.</p>
+  <div class="grid2">
+    <div class="card">
+      <h4 style="margin-bottom:10px">🧠 What the brain holds</h4>
+      <table>
+        <tr><td><b>Intent engine</b></td><td>“find my java assignments” → <code>search_files</code> + filters. Hallucinated intents are rejected — only whitelisted verbs exist.</td></tr>
+        <tr><td><b>Planner</b></td><td>Breaks the intent into steps, checks risk, orders execution, verifies results, reports back.</td></tr>
+        <tr><td><b>Context</b></td><td>Live injection: open windows, folder sizes, recent actions — every AI call sees the real OS state.</td></tr>
+        <tr><td><b>Memory</b></td><td>Persistent facts (“remember that …”) in <code>~/Memory</code>, re-injected into every conversation.</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom:12px">🗺️ Example: “clean up my desktop”</h4>
+      <div class="flow">
+        <div class="fstep"><div class="n">1</div>Scan<small>Desktop files</small></div>
+        <div class="fstep"><div class="n">2</div>Categorize<small>by purpose</small></div>
+        <div class="fstep"><div class="n">3</div>Propose<small>folders + moves</small></div>
+        <div class="fstep"><div class="n">4</div><b style="color:var(--gold)">Confirm</b><small>human gate</small></div>
+        <div class="fstep"><div class="n">5</div>Apply<small>+ audit log</small></div>
+        <div class="fstep"><div class="n">6</div>Verify<small>undo available</small></div>
+      </div>
+      <p class="note">Implemented today as the <b>Smart Organizer</b>: <code>organize Downloads</code> → review → <code>--apply</code> → <code>--undo</code>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CLI ============ -->
+<section id="cli">
+  <div class="kicker">§3 · Interface one</div>
+  <h2>The CLI: classic commands + natural language</h2>
+  <p class="sub">The terminal keeps every traditional command (<code>cd</code>, <code>ls</code>, <code>git</code>, <code>pip</code> — ~110 builtins) and layers natural language on top. Neither mode is special: both are front-doors to the same brain.</p>
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
+      <span style="margin-left:8px;color:var(--muted);font-size:12px">CYRUS Terminal — cyrus-sh</span>
+    </div>
+    <div class="term-body">
+      <div><span class="p1">rithvik@cyrus:~$</span> find my java assignments</div>
+      <div class="p3">✔ 3 ranked hits → opened in Files</div>
+      <div>&nbsp;</div>
+      <div><span class="p1">rithvik@cyrus:~$</span> ask compress the Projects folder</div>
+      <div class="p2">🧠 writes the command for you → <span class="p3">tar -czf Projects.tar.gz Projects</span></div>
+      <div class="dim">&nbsp;&nbsp;(staged in your input line — Enter runs it, you are the approval gate)</div>
+      <div>&nbsp;</div>
+      <div><span class="p1">rithvik@cyrus:~$</span> organize Downloads</div>
+      <div class="p2">Proposed: <span class="p3">Papers · Datasets · Installers</span></div>
+      <div class="dim">&nbsp;&nbsp;review → organize Downloads --apply → organize --undo</div>
+      <div>&nbsp;</div>
+      <div><span class="p1">rithvik@cyrus:~$</span> <span class="caret"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GUI ============ -->
+<section id="gui">
+  <div class="kicker">§4 · Interface two</div>
+  <h2>The GUI: intent-first desktop</h2>
+  <p class="sub">The desktop is built around one question — <i>“what do you want to do?”</i> — answered by the palette (Ctrl+Space), the chatbot, or the Start menu. Every path reaches the same intent engine.</p>
+  <div class="grid3">
+    <div class="card"><h4>✨ Ask CYRUS…</h4><p class="sub" style="margin:8px 0 0">Topbar search + palette: type an intent, get a ranked action — never a settings hunt.</p></div>
+    <div class="card"><h4>☀️ Daily briefing</h4><p class="sub" style="margin:8px 0 0">Proactive once-a-day brief from real OS state; the AI watches so you don't have to.</p></div>
+    <div class="card"><h4>🎛️ Workspaces</h4><p class="sub" style="margin:8px 0 0">“start my college workspace” restores the exact windows and folders for that context.</p></div>
+    <div class="card"><h4>🪄 App Maker</h4><p class="sub" style="margin:8px 0 0">Describe a mini-app, CYRUS builds and sandboxes it into Start → My Apps.</p></div>
+    <div class="card"><h4>🎨 Generative themes</h4><p class="sub" style="margin:8px 0 0">“A candlelit library at midnight” → palette, wallpaper and orbs recomposed.</p></div>
+    <div class="card"><h4>🎙️ Voice</h4><p class="sub" style="margin:8px 0 0">Mic dictation in, spoken replies out — the keyboard becomes optional.</p></div>
+  </div>
+</section>
+
+<!-- ============ ONE BRAIN TWO FACES ============ -->
+<section>
+  <div class="kicker">§5 · CLI ↔ GUI</div>
+  <h2>One brain, two faces — fully connected</h2>
+  <p class="sub">The killer detail: the interfaces talk to each other <i>through</i> the core. “Open a terminal here” from the GUI opens it in the right folder; “open this folder visually” from the CLI opens Files. Cross-navigation is a first-class intent.</p>
+  <div class="brain-map">
+    <div class="face">
+      <h4>⌨️ CLI</h4>
+      <ul>
+        <li><code>ai &lt;request&gt;</code> — intent → action</li>
+        <li><code>ask &lt;task&gt;</code> — AI writes the command</li>
+        <li><code>open this folder visually</code></li>
+        <li>full classic command set + git + docker</li>
+      </ul>
+    </div>
+    <div class="h-arrow">⇄</div>
+    <div class="face">
+      <h4>🖥️ GUI</h4>
+      <ul>
+        <li>Palette: <kbd>Ctrl+Space</kbd> “find my java assignments”</li>
+        <li>“Open a terminal here” → shell at that folder</li>
+        <li>Files ranked search from any surface</li>
+        <li>Chatbot with 🧠 memory + voice</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note"><b>Same flow both ways:</b> input → intent engine → policy gate → whitelisted action → audit log → result rendered in whichever window asked.</p>
+</section>
+
+<!-- ============ ROUTER ============ -->
+<section id="router">
+  <div class="kicker">§6 · Local + cloud</div>
+  <h2>The AI router: free-first, key-optional</h2>
+  <p class="sub">No provider lock-in. Tasks are classified (reasoning / fast / vision / general) and routed down a lane of providers; the first that answers wins. A pasted OpenAI key jumps every queue; local rules always catch the fall.</p>
+  <div class="lanes">
+    <div class="lane"><b>🧠 Astra lane (reasoning)</b><div class="chain"><span class="chip first">OpenAI key?</span><span class="chip">Puter · keyless</span><span class="chip">OpenRouter :free 70B</span><span class="chip">Gemini</span><span class="chip">Groq</span><span class="chip">rules</span></div><div class="who">deep questions, design, debugging</div></div>
+    <div class="lane"><b>⚡ Fast lane</b><div class="chain"><span class="chip first">Groq 8B</span><span class="chip">Puter</span><span class="chip">rules</span></div><div class="who">quick facts, briefings, tags</div></div>
+    <div class="lane"><b>👁️ Vision lane</b><div class="chain"><span class="chip first">Gemini</span><span class="chip">OpenRouter</span><span class="chip">Puter</span></div><div class="who">image understanding, OCR</div></div>
+    <div class="lane"><b>🔒 Local-only</b><div class="chain"><span class="chip first">rules engine</span></div><div class="who">privacy = Local — deterministic, offline, instant</div></div>
+  </div>
+  <p class="note"><b>Multimodal, same router:</b> image generation, TTS, transcription, video and OCR ride Puter — surfaced in AI Studio, the chatbot's voice mode, and Photos.</p>
+</section>
+
+<!-- ============ POLICY ============ -->
+<section id="policy">
+  <div class="kicker">§7 · Trust</div>
+  <h2>Permission system: risk-classified, human-gated</h2>
+  <p class="sub">The model never receives raw shell access. It emits whitelisted intents; a static policy table classifies each; humans confirm anything destructive. Every step lands in the audit log (Memory app).</p>
+  <div class="card">
+    <table>
+      <tr><th>Risk</th><th>Examples</th><th>Behavior</th></tr>
+      <tr><td><span class="pill low">LOW</span></td><td>Search files · open apps · read files · system info · chat</td><td>Runs immediately, logged</td></tr>
+      <tr><td><span class="pill med">MEDIUM</span></td><td>Move files · organize folders · install packages · change settings</td><td>Confirmation dialog → then runs</td></tr>
+      <tr><td><span class="pill high">HIGH</span></td><td>Delete trees · modify system files · privileged commands</td><td>Blocked outright — or requires explicit typed confirmation with undo staged</td></tr>
+    </table>
+    <p class="note"><b>Error recovery is part of the policy:</b> failures come back explained (“pandas is missing — requirements.txt found → [Install]”) instead of raw tracebacks. Terminal <code>explain &lt;cmd&gt;</code> pre-warns before you even run a thing.</p>
+  </div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section id="roadmap">
+  <div class="kicker">§8 · The path</div>
+  <h2>Roadmap: environment first, kernel never (until it matters)</h2>
+  <p class="sub">Don't build a kernel to prove a point. Ship the AI-native environment on an existing base, then — only when the layers above are stable — consider a Linux-derived bottom layer.</p>
+  <div class="road">
+    <div class="stage done"><h4>Stage 0 · Browser port <span class="st st-done">SHIPPED</span></h4><p>Desktop, WM, dock, terminal (~110 cmds), Files, Studio IDE, AI Studio, router, policy engine, memory, briefing, App Maker, themes, organizer.</p></div>
+    <div class="stage"><h4>Stage 1 · Life &amp; productivity <span class="st st-now">IN PLAN</span></h4><p>Calendar, Reminders, Photos, Media, Camera, Contacts, Print/PDF, Import/Export + Backup, Trash — the daily-use surface.</p></div>
+    <div class="stage"><h4>Stage 2 · Desktop completeness <span class="st st-next">NEXT</span></h4><p>Right-click everywhere, drag &amp; drop, Aero Snap, real virtual desktops, widgets, quick settings, clipboard history, session restore.</p></div>
+    <div class="stage"><h4>Stage 3 · Grandma-simple <span class="st st-next">NEXT</span></h4><p>Multi-user profiles, Simple Mode (huge tiles, voice-first), guided tour, global undo, accessibility.</p></div>
+    <div class="stage"><h4>Stage 4 · Real base <span class="st st-next">LATER</span></h4><p>The same Brain/CLI/GUI/Agents architecture, re-hosted on a Linux base with real filesystem and process control — the interfaces never change, the kernel does.</p></div>
+  </div>
+</section>
+
+<footer>
+  <b>CYRUS = you → AI → applications → files → OS.</b><br>
+  This page documents the live build in <code>.freebuff/cyrus-os.html</code> · plan approved Sept 2026
+</footer>
+
+</div>
+</body>
+</html>

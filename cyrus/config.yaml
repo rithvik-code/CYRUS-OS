@@ -1,0 +1,42 @@
+# CYRUS config — everything the AI is allowed to touch is declared here.
+# If it's not in this file, CYRUS cannot act on it. That's the point.
+
+hotkey: "<ctrl>+<space>"
+
+llm:
+  backend: "ollama"          # "ollama" (local, free) or "cloud" (requires CYRUS_CLOUD_KEY env var)
+  ollama_model: "qwen2.5:3b" # swap for llama3.2 or any model you've pulled
+  ollama_host: "http://localhost:11434"
+  cloud_model: "claude-haiku-4-5-20251001"
+
+# Folders CYRUS is allowed to search/index. Nothing outside this list is touched.
+indexed_paths:
+  - "~/Documents"
+  - "~/Desktop"
+  - "~/Projects"
+
+# Apps CYRUS can open by name. Map friendly names -> actual launch commands.
+apps:
+  "vs code": "code"
+  "terminal": "gnome-terminal"     # adjust per OS
+  "browser": "xdg-open https://"
+  "files": "nautilus"
+
+# Named workspaces: what to open together when the user says "start my X workspace".
+workspaces:
+  college:
+    apps: ["vs code", "browser"]
+    open_folder: "~/Projects/college"
+  research:
+    apps: ["vs code", "terminal"]
+    open_folder: "~/Projects/research"
+
+# Pre-registered scripts. The model can only CHOOSE one of these by name —
+# it never generates shell text itself. Add new ones here deliberately.
+scripts:
+  "python data science setup":
+    path: "./scripts/setup_datascience.sh"
+    risk: "medium"
+  "clean desktop":
+    path: "./scripts/clean_desktop.sh"
+    risk: "medium"

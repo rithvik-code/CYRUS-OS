@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CYRUS — AI Command Layer</title>
+<style>
+  :root {
+    --bg: #141414; --panel: #1e1e1e; --panel2: #2b2b2b;
+    --text: #f0f0f0; --muted: #a0a0a0; --accent: #9fdf9f; --warn: #dddd88;
+    --red: #c0392b; --border: #3a3a3a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif; line-height: 1.6;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+  header { text-align: center; margin-bottom: 44px; }
+  .logo {
+    font-size: 44px; font-weight: 800; letter-spacing: 10px;
+    color: var(--accent); text-transform: uppercase;
+  }
+  .tagline { color: var(--muted); margin-top: 6px; font-size: 15px; }
+  .pill {
+    display: inline-block; margin-top: 14px; padding: 4px 14px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--panel);
+    font-size: 12.5px; color: var(--muted);
+  }
+  .pill b { color: var(--accent); }
+  h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 2.5px;
+    color: var(--accent); margin: 40px 0 14px;
+    border-bottom: 1px solid var(--border); padding-bottom: 8px;
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 22px;
+  }
+  /* pipeline */
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+  .step {
+    flex: 1 1 120px; background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 10px; text-align: center;
+  }
+  .step .n { font-size: 11px; color: var(--muted); }
+  .step .t { font-weight: 600; font-size: 13.5px; margin-top: 2px; }
+  .step .d { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .arrow { align-self: center; color: var(--accent); font-size: 18px; }
+  /* tables */
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px;
+       text-transform: uppercase; letter-spacing: 1px; padding: 8px 10px;
+       border-bottom: 1px solid var(--border); }
+  td { padding: 9px 10px; border-bottom: 1px solid #262626; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  code {
+    font-family: Consolas, "Courier New", monospace; font-size: 12.5px;
+    background: var(--panel2); padding: 1.5px 6px; border-radius: 4px;
+    color: var(--accent);
+  }
+  .risk { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; letter-spacing: 0.5px; }
+  .risk.low  { background: #14321a; color: #9fdf9f; border: 1px solid #2c5e36; }
+  .risk.med  { background: #332b12; color: var(--warn); border: 1px solid #6b5a1e; }
+  /* two col */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .cols { grid-template-columns: 1fr; } }
+  ul { list-style: none; }
+  ul li { padding: 5px 0 5px 22px; position: relative; font-size: 13.5px; color: #d5d5d5; }
+  ul li::before { content: "▸"; position: absolute; left: 4px; color: var(--accent); }
+  pre {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; font-family: Consolas, monospace; font-size: 12.5px;
+    overflow-x: auto; color: #d5d5d5; line-height: 1.55;
+  }
+  pre .c { color: #6a9955; }
+  .note { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+  footer { margin-top: 56px; text-align: center; color: #666; font-size: 12px; }
+  kbd {
+    background: var(--panel2); border: 1px solid var(--border); border-bottom-width: 2px;
+    border-radius: 4px; padding: 1px 7px; font-family: Consolas, monospace; font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">CYRUS</div>
+  <div class="tagline">An AI command layer that sits on top of your existing OS — not a new OS.</div>
+  <div class="pill">Palette (<kbd>Ctrl</kbd>+<kbd>Space</kbd>) &nbsp;·&nbsp; Brain (<b>Ollama</b>, local &amp; free) &nbsp;·&nbsp; Locked-down hand (<b>5 whitelisted actions</b>)</div>
+</header>
+
+<h2>The request pipeline</h2>
+<div class="card">
+  <div class="flow">
+    <div class="step"><div class="n">1</div><div class="t">Hotkey</div><div class="d">Global <kbd>Ctrl+Space</kbd></div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">2</div><div class="t">Palette</div><div class="d">Type plain English</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">3</div><div class="t">Intent</div><div class="d">LLM → JSON schema</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">4</div><div class="t">Permissions</div><div class="d">Static risk table</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">5</div><div class="t">Confirm</div><div class="d">If risky, you approve</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">6</div><div class="t">Dispatch</div><div class="d">Whitelist only</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">7</div><div class="t">Log</div><div class="d">SQLite audit trail</div></div>
+  </div>
+  <p class="note">Nothing skips a step. If intent parsing fails, CYRUS stops and tells you — it never retries with a "looser" interpretation.</p>
+</div>
+
+<h2>The five MVP actions (on purpose, only five)</h2>
+<div class="card">
+  <table>
+    <tr><th>Action</th><th>Example phrase</th><th>Risk</th></tr>
+    <tr><td><code>search_files</code></td><td>"find my java assignments"</td><td><span class="risk low">LOW</span></td></tr>
+    <tr><td><code>open_app</code></td><td>"open vs code"</td><td><span class="risk low">LOW</span></td></tr>
+    <tr><td><code>open_workspace</code></td><td>"start my college workspace"</td><td><span class="risk low">LOW</span></td></tr>
+    <tr><td><code>move_file</code></td><td>"move report.pdf to Documents/Work"</td><td><span class="risk med">MEDIUM · confirm</span></td></tr>
+    <tr><td><code>run_script</code></td><td>"set up my python data science environment"</td><td><span class="risk med">MEDIUM · confirm</span></td></tr>
+  </table>
+  <p class="note">The model never executes raw commands — it can only emit one of the intents in <code>actions.py</code>, and hallucinated intents are rejected before anything runs.</p>
+</div>
+
+<h2>Architecture</h2>
+<div class="cols">
+  <div class="card">
+    <ul>
+      <li><code>main.py</code> — entry point; wires hotkey → pipeline</li>
+      <li><code>palette_ui.py</code> — Tkinter palette + confirm dialog</li>
+      <li><code>intent.py</code> — LLM call → validated JSON intent</li>
+      <li><code>permissions.py</code> — readable static risk gate</li>
+      <li><code>actions.py</code> — the security boundary (whitelist)</li>
+      <li><code>indexer.py</code> — local semantic file index (MiniLM)</li>
+      <li><code>memory.py</code> — SQLite transcript, always auditable</li>
+    </ul>
+  </div>
+  <div class="card">
+    <ul>
+      <li><b>Local LLM:</b> Ollama (<code>qwen2.5:3b</code>) — no key, offline</li>
+      <li><b>Cloud opt-in:</b> only if <code>CYRUS_CLOUD_KEY</code> is set</li>
+      <li><b>Search:</b> <code>sentence-transformers</code> all-MiniLM-L6-v2</li>
+      <li><b>Storage:</b> SQLite — zero config, built into Python</li>
+      <li><b>UI:</b> Tkinter — ships with Python</li>
+      <li><b>Sandbox:</b> actions restricted to <code>indexed_paths</code> in <code>config.yaml</code></li>
+      <li><b>Scripts:</b> pre-registered only — the model picks, never writes shell</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Run it</h2>
+<div class="card">
+<pre><span class="c"># 1. install deps</span>
+pip install -r requirements.txt
+
+<span class="c"># 2. pull a local model (free, offline)</span>
+ollama pull qwen2.5:3b
+
+<span class="c"># 3. launch</span>
+python -m cyrus.main
+
+<span class="c"># press Ctrl+Space → "find my java assignments"</span></pre>
+  <p class="note">Tests: <code>python -m pytest cyrus/tests/</code> &nbsp;·&nbsp; Config: <code>cyrus/config.yaml</code> declares everything the AI is allowed to touch. If it's not in the file, CYRUS cannot act on it.</p>
+</div>
+
+<h2>Deliberate scope decisions</h2>
+<div class="card">
+  <ul>
+    <li>Not a kernel, not a distro, not a desktop environment replacement.</li>
+    <li>One local model is the default path — cloud is opt-in per env var, never required.</li>
+    <li>Filename + config-folder indexing in v1; content indexing is a real scope decision, not a checkbox.</li>
+    <li>Risk classification is a static table you can read top-to-bottom — more trustworthy than a black box for something with filesystem access.</li>
+    <li>Adding a sixth action is the wrong next step until these five feel reliable.</li>
+  </ul>
+</div>
+
+<footer>CYRUS · palette · brain · locked-down hand</footer>
+</div>
+</body>
+</html>
