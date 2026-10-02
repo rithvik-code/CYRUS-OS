@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="320" viewBox="0 0 960 320" role="img" aria-label="CYRUS OS — AI-native operating environment">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b1233"/>
+      <stop offset="1" stop-color="#0d0918"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffe9b0"/>
+      <stop offset="45%" stop-color="#d4a53f"/>
+      <stop offset="100%" stop-color="#b8860b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="1.5" cy="1.5" r="1.2" fill="#ffffff" opacity="0.06"/>
+    </pattern>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="320" rx="22" fill="url(#bg)"/>
+  <rect x="0" y="0" width="960" height="320" rx="22" fill="url(#dots)"/>
+  <rect x="1" y="1" width="958" height="318" rx="21" fill="none" stroke="#2e2154" stroke-width="2"/>
+  <circle cx="812" cy="36" r="180" fill="url(#glow)"/>
+  <circle cx="110" cy="306" r="150" fill="url(#glow)" opacity="0.5"/>
+
+  <text x="480" y="126" text-anchor="middle"
+        font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif"
+        font-size="90" font-weight="800" letter-spacing="12" fill="url(#gold)">CYRUS OS</text>
+
+  <text x="480" y="164" text-anchor="middle"
+        font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif"
+        font-size="18" letter-spacing="7" fill="#b6abd8">AI-NATIVE OPERATING ENVIRONMENT</text>
+
+  <rect x="170" y="196" width="620" height="62" rx="16" fill="#241741" stroke="#443073" stroke-width="1.5"/>
+  <text x="200" y="235"
+        font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+        font-size="20" font-weight="700" fill="#d4a53f">&#8250;</text>
+  <text x="226" y="235"
+        font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+        font-size="19" fill="#efe9f8">find my java assignments</text>
+  <rect x="642" y="211" width="120" height="32" rx="9" fill="#33235c" stroke="#4b3680" stroke-width="1"/>
+  <text x="702" y="232" text-anchor="middle"
+        font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif"
+        font-size="13" fill="#c9bff0">Ctrl + Space</text>
+
+  <text x="480" y="292" text-anchor="middle"
+        font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+        font-size="14" letter-spacing="3" fill="#8b7fb8">intent  -&gt;  policy  -&gt;  action  -&gt;  audit</text>
+</svg>

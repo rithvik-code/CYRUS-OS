@@ -1,5 +1,8 @@
 # CYRUS
 
+> The native layer of **CYRUS OS** — project overview, screenshots and quickstart live in the
+> [top-level README](../README.md).
+
 An AI command layer that sits on top of your existing OS — not a new OS.
 
 ## What this is
