@@ -434,3 +434,26 @@
 .cyr-off-out{background:#0b0618;border:1px solid #2a1f47;border-radius:7px;padding:9px;
   font-family:var(--st-mono,monospace);font-size:11px;line-height:1.55;color:#cfc6ea;
   white-space:pre-wrap;margin:9px 0 0;max-height:260px;overflow:auto}
+
+/* ============================================================ OS PHASE 15 */
+/* Search */
+.cyr-search{padding:12px 14px;overflow:auto;height:100%}
+.cyr-search-bar{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.cyr-search-bar input{flex:1;min-width:200px;background:#160e28;border:1px solid #2f2352;
+  color:var(--text);border-radius:7px;padding:8px 11px;font:inherit;font-size:13px}
+.cyr-search-bar input:focus{outline:none;border-color:var(--accent)}
+.cyr-search-bar select{background:#160e28;border:1px solid #2f2352;color:var(--text);
+  border-radius:7px;padding:7px 9px;font:inherit;font-size:12px}
+.cyr-search-note{font-size:11px;color:#6f6690;margin-bottom:11px;font-family:var(--st-mono,monospace)}
+.cyr-search-r{border:1px solid #2c2150;border-radius:9px;padding:9px 11px;margin-bottom:7px;
+  background:rgba(255,255,255,.02);cursor:pointer}
+.cyr-search-r:hover{border-color:var(--accent)}
+.cyr-search-r .h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.cyr-search-r .f{font-size:13px;font-weight:600}
+.cyr-search-r .p{font-size:11px;color:var(--muted);font-family:var(--st-mono,monospace)}
+.cyr-search-r .m{font-size:10.5px;color:#6f6690;margin-top:2px}
+.cyr-search-r .s{background:#0b0618;border:1px solid #241a44;border-radius:6px;padding:7px 9px;
+  font-family:var(--st-mono,monospace);font-size:11px;line-height:1.5;color:#cfc6ea;
+  white-space:pre-wrap;margin:7px 0 0;max-height:110px;overflow:auto}
+.cyr-search-empty{font-size:12.5px;color:var(--muted);padding:22px 4px;line-height:1.6}
+.cyr-search-empty b{color:var(--accent)}

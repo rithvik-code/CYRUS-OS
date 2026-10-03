@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/build-zero-00B894?style=for-the-badge" alt="Zero build">
   <img src="https://img.shields.io/badge/AI-local--first%20%7C%20keyless-6C5CE7?style=for-the-badge" alt="Local-first, keyless AI">
   <img src="https://img.shields.io/badge/actions-policy--gated%20%7C%20audited-E17055?style=for-the-badge" alt="Policy-gated and audited">
-  <img src="https://img.shields.io/badge/tests-30%20safety%20tests-0984E3?style=for-the-badge" alt="30 safety tests">
+  <img src="https://img.shields.io/badge/tests-34%20safety%20tests-0984E3?style=for-the-badge" alt="34 safety tests">
 </p>
 
 <p>
@@ -271,7 +271,8 @@ CYRUS OS/
 │   ├── test_system.js           ← 91 assertions that no measurement is ever invented
 │   ├── test_snapshots.js        ← 63 assertions that a delete is genuinely recoverable
 │   ├── test_profiles.js         ← 49 assertions over vault encryption and the Ollama diagnosis
-│   ├── os_p1*.js                ← OS phases 10–14 (real disk, system, snapshots, profiles, offline)
+│   ├── test_search.js           ← 55 assertions that search reads CONTENT, ranks, and stays incremental
+│   ├── os_p1*.js                ← OS phases 10–15 (real disk, system, snapshots, profiles, offline, search)
 │   ├── studio_p*.js             ← Studio source chunks, one per phase
 │   ├── sw.js / manifest.webmanifest ← offline shell; needs a served origin
 │   └── cyrus-architecture.html  ← visual map of the layers
@@ -287,7 +288,7 @@ CYRUS OS/
 │   │   └── palette_ui.py        ← Tkinter palette (ships with Python)
 │   ├── config.yaml              ← everything the AI may touch, declared
 │   ├── scripts/                 ← install.sh + the registered, pre-approved scripts
-│   └── tests/                   ← 30 tests aimed only at the safety-critical files
+│   └── tests/                   ← 34 tests aimed only at the safety-critical files
 ├── assets/                      ← screenshots + banner
 ├── cyrus.zip / files.zip        ← release snapshots
 └── README.md                    ← you are here
@@ -326,8 +327,9 @@ cd cyrus && python -m cyrus.bridge    # then Locations → CYRUS bridge
 
 # running the tests
 node .freebuff/test_disk.js && node .freebuff/test_system.js \
-  && node .freebuff/test_snapshots.js && node .freebuff/test_profiles.js
-cd cyrus && python -m pytest tests/   # 30 safety tests
+  && node .freebuff/test_snapshots.js && node .freebuff/test_profiles.js \
+  && node .freebuff/test_search.js
+cd cyrus && python -m pytest tests/   # 34 safety tests
 ```
 
 ## Honest limits right now
@@ -350,7 +352,13 @@ the System app lists them as permanently `not reachable from a browser` rather t
   lose that write; each mount shows its own last-sync time.
 - **Studio has no language servers.** Real type checking needs tsserver, pyright and rust-analyzer
   as separate processes, so Studio does structural analysis and says so.
-- **Search is over filenames and paths**, not full file contents.
+- **Search reads contents, but it is lexical, not neural.** CYRUS indexes every file's text and
+  ranks with BM25 over stemmed tokens — offline, in ~5ms for an unchanged tree. So *recursion*
+  finds a file that says *recursive*, but it will not find a file that only says *the function
+  calls itself*. Meaning-based search exists on the native side
+  ([`cyrus/cyrus/indexer.py`](cyrus/cyrus/indexer.py), sentence-transformers + SQLite); a page
+  cannot run that model offline, so CYRUS says "BM25 (lexical, offline)" rather than claiming
+  something it cannot do.
 - **The risk table is static.** A table you can read beats a black box with filesystem access.
 
 ---

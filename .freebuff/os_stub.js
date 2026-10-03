@@ -93,6 +93,10 @@ function makeVFS() {
       const name = this.base(path);
       if (dir.children[name] && dir.children[name].type === "dir") return false;
       dir.children[name] = mkFile(name, content);
+      // The real VFS announces every mutation on the bus. Without this the stub
+      // skipped every Bus.on("vfs") hook, which is how the search index could
+      // look broken while its wiring was in fact fine.
+      if (this && this.host && this.host.Bus) this.host.Bus.emit("vfs");
       return true;
     },
     remove(path) {
@@ -100,6 +104,7 @@ function makeVFS() {
       const dir = this.node(this.parent(path));
       if (!n || !dir || dir.type !== "dir") return false;
       delete dir.children[this.base(path)];
+      if (this && this.host && this.host.Bus) this.host.Bus.emit("vfs");
       return true;
     },
     move(src, dstDirPath) {
@@ -162,8 +167,24 @@ function makeCtx(opts) {
     fmtSize: kb => kb >= 1048576 ? (kb / 1048576).toFixed(1) + " GB"
               : kb >= 1024 ? (kb / 1024).toFixed(1) + " MB" : Math.round(kb) + " KB",
     VFS, Store,
-    Bus: { m: {}, on() {}, emit() {} },
-    Log: { record() { ctx.__log.push(Array.prototype.slice.call(arguments)); }, recent: () => [], all: () => [], clear() {} },
+    // A real emitter. The no-op version this replaces silently skipped every
+    // Bus.on("vfs") invalidation hook, so a test could pass while the real
+    // wiring was broken — and could fail for reasons that had nothing to do
+    // with the code under test.
+    Bus: {
+      _m: {},
+      on(e, f){ (this._m[e] = this._m[e] || []).push(f); },
+      emit(e, d){ (this._m[e] || []).forEach(f => { try { f(d); } catch (err) { ctx.__busErr = err; } }); },
+    },
+    // Faithful to the real Log.record, which JSON-stringifies `fields` before
+    // storing it. Keeping them raw here made assertions disagree with the
+    // shape the audit log actually has.
+    Log: {
+      record(user_text, intent, fields, risk, confirmed, ok, message){
+        ctx.__log.push([user_text, intent, JSON.stringify(fields), risk, !!confirmed, !!ok, message]);
+      },
+      recent: () => [], all: () => [], clear() {},
+    },
     Toast: { show() {}, error() {} },
     Modal: { confirm: () => Promise.resolve(true), info() {} },
     Apps: { reg: new Map(), register(id, d) { ctx.__apps[id] = d; }, open() {} },
@@ -215,6 +236,7 @@ function makeCtx(opts) {
     __log: [], __apps: {}, __guards: [], __timers: timers,
     __fireTimers() { const t = timers.splice(0, timers.length); t.forEach(f => { try { f(); } catch (e) { ctx.__timerErr = e; } }); },
   };
+  VFS.host = ctx;            // so mutations emit on the real bus
   ctx.addEventListener = () => {};
   ctx.removeEventListener = () => {};
   ctx.window = ctx;
@@ -237,7 +259,7 @@ function load(ctx, file) {
 const OS_BINDINGS = [
   "Cyrus", "Mnt", "BACKENDS", "Bridge", "DiskUsage", "MntPicker",
   "SysProbe", "Snapshots", "MemSnapStore", "snapshotBefore",
-  "Vaults", "Profiles", "Offline", "OllamaDiag",
+  "Vaults", "Profiles", "Offline", "OllamaDiag", "SearchIndex",
   "mkFileNode", "mkDirNode", "nodeAt", "ensureDir", "pad",
 ];
 function loadOS(ctx) {
@@ -246,6 +268,7 @@ function loadOS(ctx) {
   load(ctx, "os_p12_snapshots.js");
   load(ctx, "os_p13_profiles.js");
   load(ctx, "os_p14_offline.js");
+  load(ctx, "os_p15_search.js");
   for (const name of OS_BINDINGS) {
     const v = vm.runInContext(name, ctx);
     if (v !== undefined) ctx[name] = v;

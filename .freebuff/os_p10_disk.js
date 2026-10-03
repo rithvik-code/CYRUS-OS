@@ -356,6 +356,16 @@ const Bridge = {
 
   TIMEOUT_MS: 45000,   // a cold read of a OneDrive/network folder is slow, not broken
 
+  // The daemon prints its URL with no trailing path, and that is exactly the
+  // string a user pastes into Settings. Concatenating it directly with a verb
+  // produced "http://127.0.0.1:8787ping", which fails to parse as a URL and
+  // surfaced as the misleading "could not reach the bridge" — when the bridge
+  // was running and answering fine. One separator, inserted here, once.
+  endpoint(op){
+    const base = String(this.url || "").replace(/\/+$/, "");
+    return base + "/" + String(op || "").replace(/^\/+/, "");
+  },
+
   async call(op, args){
     if(!this.url) throw new Error("no bridge URL — start one in Settings → System");
     let r;
@@ -365,7 +375,7 @@ const Bridge = {
     const ac = ("AbortController" in window) ? new AbortController() : null;
     const timer = ac ? setTimeout(()=>ac.abort(), this.TIMEOUT_MS) : null;
     try{
-      r = await fetch(this.url + op, {
+      r = await fetch(this.endpoint(op), {
         method:"POST",
         headers:{ "Content-Type":"application/json", "X-Cyrus-Token":this.token },
         body: JSON.stringify(args || {}),
@@ -381,7 +391,7 @@ const Bridge = {
       this.online = false;
       // A refused connection and a wrong origin look identical to fetch(). Say
       // which one it most likely is instead of showing a bare "failed".
-      this.lastError = "could not reach " + this.url + " — is `python -m cyrus.bridge` running?";
+      this.lastError = "could not reach " + this.endpoint(op) + " — is `python -m cyrus.bridge` running?";
       throw new Error(this.lastError);
     }finally{ if(timer) clearTimeout(timer); }
     let body;

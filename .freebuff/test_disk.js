@@ -140,6 +140,46 @@ async function main() {
   eq(Bridge.online, false, "a bridge with no URL is not 'online'");
   ok(bridgeErr === null, "probe reports false rather than throwing when unconfigured");
 
+  // ---- URL construction ----------------------------------------------------
+  // Regression: the daemon prints "http://127.0.0.1:8787" with no trailing
+  // path, and that is the exact string a user pastes into Settings. Naive
+  // concatenation produced "http://127.0.0.1:8787ping", which throws a URL
+  // parse TypeError and was reported as "could not reach the bridge" — while
+  // the bridge was running and answering perfectly.
+  Bridge.url = "http://127.0.0.1:8787";
+  eq(Bridge.endpoint("ping"), "http://127.0.0.1:8787/ping", "endpoint inserts the separator");
+  Bridge.url = "http://127.0.0.1:8787/";
+  eq(Bridge.endpoint("list"), "http://127.0.0.1:8787/list", "a trailing slash on the base does not double up");
+  Bridge.url = "http://127.0.0.1:8787///";
+  eq(Bridge.endpoint("sensors"), "http://127.0.0.1:8787/sensors", "and neither do several");
+  Bridge.url = "http://127.0.0.1:8787";
+  eq(Bridge.endpoint("/read"), "http://127.0.0.1:8787/read", "a leading slash on the verb does not double up");
+  Bridge.url = "";
+  eq(Bridge.endpoint("ping"), "/ping", "an unset base still yields a parseable path, not undefined");
+
+  // And the URL actually handed to fetch must be the built one.
+  {
+    let asked = null;
+    const c2 = makeCtx({ fetch: async (u) => { asked = String(u); return { ok:true, status:200, json: async()=>({ok:true, result:{version:"0.1"}}) }; } });
+    loadOS(c2);
+    c2.Bridge.url = "http://127.0.0.1:8787";
+    c2.Bridge.token = "t";
+    await c2.Bridge.call("ping", {});
+    eq(asked, "http://127.0.0.1:8787/ping", "fetch is called with a well-formed URL");
+    eq(c2.Bridge.online, true, "and a successful reply marks the bridge online");
+  }
+
+  // A URL that does not parse must be reported as such, not as "bridge down".
+  {
+    const c3 = makeCtx({ fetch: async () => { throw new TypeError("Failed to parse URL from x"); } });
+    loadOS(c3);
+    c3.Bridge.url = "notaurl";
+    c3.Bridge.token = "t";
+    let msg = null;
+    try { await c3.Bridge.call("ping", {}); } catch(e){ msg = e.message; }
+    ok(msg && /notaurl\/ping/.test(msg), "a malformed base is named in the error, so the cause is visible", msg);
+  }
+
   process.exit(report("disk tests"));
 }
 
