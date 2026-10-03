@@ -16,6 +16,8 @@
 }
   --st-mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
 }
+  --st-mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
+}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -322,6 +324,7 @@ kbd{background:var(--panel3);border:1px solid var(--border2);border-bottom-width
 .st-status{display:flex;align-items:center;gap:14px;padding:4px 12px;border-top:1px solid var(--border);background:rgba(19,12,34,.85);font-size:11px;color:var(--muted);flex:none}
 .st-status .tb-btn{font-size:11px;padding:3px 10px}
 
+/*STUDIO_CSS_START*/
 /* ---------- CYRUS STUDIO v2 — IDE surface ---------- */
 .st2{display:flex;flex-direction:column;height:100%;background:#0b0618;font-size:12.5px}
 .st2-bar{display:flex;align-items:center;gap:4px;padding:4px 8px;background:#150d29;border-bottom:1px solid #2a1f47;flex:none;user-select:none}
@@ -659,6 +662,10 @@ kbd{background:var(--panel3);border:1px solid var(--border2);border-bottom-width
 .st2-conn-cred code{color:#d4a53f}
 .st2-conn-note{margin:8px 0;font-size:10.5px;color:#6f6690;line-height:1.65}
 .st2-conn-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+/*STUDIO_CSS_END*/
+
+
 
 
 /* assistant */
@@ -8244,9 +8251,9 @@ const StConn = {
     return Promise.race([ pr, new Promise((_,rej)=>setTimeout(()=>rej(new Error("timed out")), ms)) ]);
   },
 
-  // The Puter authority is only green when whoami() actually resolves. Token
-  // presence alone is not proof, and if the SDK exposes no whoami we say the
-  // claim is weak instead of dressing it up as verified.
+  // The Puter authority is only green when the SDK actually resolves an identity
+  // behind it (whoami, else getUser). Token presence alone is not proof, and if
+  // neither surface exists we mark the claim weak rather than dress it up.
   async whoami(){
     if(!this.token()) return { ok:false, why:"no authority saved yet" };
     try{ await this.withTimeout(Router.puterReady(), 12000); }
@@ -8263,6 +8270,20 @@ const StConn = {
         return { ok:false, why:m.slice(0,60) || "whoami failed" };
       }
     }
+    // The published SDK has no whoami on the global; getUser is the public
+    // equivalent and it really does prove a signed-in identity behind the token.
+    if(typeof p.getUser === "function"){
+      try{
+        const u = await this.withTimeout(Promise.resolve(p.getUser()), 12000);
+        if(u) return { ok:true, who:(u.username||u.email||u.sub||""), weak:false };
+        return { ok:false, why:"no signed-in user behind that authority" };
+      }catch(e){
+        const m = String((e && e.message) || e || "");
+        if(/401|unauthor/i.test(m) || (e && e.status === 401)) return { ok:false, why:"401 — the saved authority was rejected" };
+        return { ok:false, why:m.slice(0,60) || "getUser failed" };
+      }
+    }
+    // Nothing to verify with — say so instead of dressing a token up as proof.
     return { ok:!!this.normalize(p.authToken), who:"", weak:true };
   },
 
@@ -8563,6 +8584,10 @@ const StConn = {
   refreshAll(){ return this.restore(); },
 };
 /*STUDIO_INSERT*/
+
+// --- CYRUS Studio (VS Code + Cursor style IDE: explorer, tabs, runner, AI copilot)
+// ============================================================================
+
 
 // --- CYRUS Studio (VS Code + Cursor style IDE: explorer, tabs, runner, AI copilot)
 function openEditor(path){ openStudio(path ? { path } : undefined); }

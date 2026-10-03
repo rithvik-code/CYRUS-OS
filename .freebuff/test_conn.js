@@ -128,131 +128,118 @@ function makeCtx(opts) {
   ok(cell.indexOf(tok) < 0, "status cell — never carries the token");
 }
 
-// ---- 4. a 401 must never render as connected ------------------------------
-{
-  const tok = "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHH";
-  const ctx = makeCtx({
-    puter:{ authToken: tok, whoami: async ()=>{ const e = new Error("Unauthorized"); e.status = 401; throw e; } },
-  });
-  ctx.Router.keys().puterToken = tok;
-  ctx.StConn.verify("puter").then(()=>{
+// ---- 4 onward: the async checks, in one strictly sequential flow ---------
+async function main(){
+  const TOK = "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHH";
+
+  // 4. a 401 must never render as connected
+  {
+    const ctx = makeCtx({
+      puter:{ authToken: TOK, whoami: async ()=>{ const e = new Error("Unauthorized"); e.status = 401; throw e; } },
+    });
+    ctx.Router.keys().puterToken = TOK;
+    await ctx.StConn.verify("puter");
     const r = ctx.StConn.rows.puter;
-    ok(r && r.state !== "connected",
-       "verify — a 401 is never reported as connected",
-       "state=" + (r && r.state));
-    ok(r && r.state === "needs",
-       "verify — a 401 lands in 'needs' so the panel offers one click",
+    ok(r && r.state !== "connected", "verify — a 401 is never reported as connected", "state=" + (r && r.state));
+    ok(r && r.state === "needs", "verify — a 401 lands in 'needs' so the panel offers one click",
        "state=" + (r && r.state) + " detail=" + (r && r.detail));
-    finish();
-  }).catch(e=>{ fail++; failures.push("verify — 401 path threw: " + e.message); finish(); });
-}
+  }
 
-let pending = 0;
+  // 4b. no stored authority must always read "off", never "needs"
+  {
+    const c = makeCtx({ puter:{} });
+    await c.StConn.verify("puter");
+    eq(c.StConn.rows.puter.state, "off", "verify — with no authority stored the row is off, never needs");
+    await c.StConn.restore();
+    eq(c.StConn.rows.puter.state, "off", "restore — the no-authority path agrees with verify");
+    eq(c.Router.keys().puterToken, undefined, "restore — an empty start never invents an authority");
+  }
 
-function finish(){
-  // ---- 4b. no stored authority must always read "off", never "needs" -------
-{
-  const c = makeCtx({ puter:{} });
-  c.StConn.verify("puter").then(()=>{
-    eq(c.StConn.rows.puter.state, "off",
-       "verify — with no authority stored the row is off, never needs");
-    return c.StConn.restore();
-  }).then(()=>{
-    eq(c.StConn.rows.puter.state, "off",
-       "restore — the no-authority path agrees with verify");
-    eq(c.Router.keys().puterToken, undefined,
-       "restore — an empty start never invents an authority");
-  }).then(finish).catch(e=>{ fail++; failures.push("no-authority path threw: " + e.message); finish(); });
-}
-
-// ---- 5. a working whoami is the only thing that earns green -------------
-  const tok = "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHH";
-  const c5 = makeCtx({ puter:{ authToken: tok, whoami: async ()=>({ username:"rithvik" }) } });
-  c5.Router.keys().puterToken = tok;
-  c5.StConn.verify("puter").then(()=>{
-    const r = c5.StConn.rows.puter;
+  // 5. a resolving whoami is the only thing that earns an unqualified green
+  {
+    const c = makeCtx({ puter:{ authToken: TOK, whoami: async ()=>({ username:"rithvik" }) } });
+    c.Router.keys().puterToken = TOK;
+    await c.StConn.verify("puter");
+    const r = c.StConn.rows.puter;
     ok(r.state === "connected", "verify — a resolving whoami turns the row green", JSON.stringify(r));
     ok(/rithvik/.test(r.detail), "verify — the row says who the authority belongs to", r.detail);
     ok(r.weak === false, "verify — a real whoami is not flagged weak");
+  }
 
-    // ---- 6b. getUser is a real verification surface, not a weak claim -----
-{
-  const tok = "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHH";
-  const c = makeCtx({ puter:{ authToken: tok, getUser: async ()=>({ username:"rithvik" }) } });
-  c.Router.keys().puterToken = tok;
-  c.StConn.verify("puter").then(()=>{
+  // 6. getUser is the surface the published SDK actually exposes — real proof
+  {
+    const c = makeCtx({ puter:{ authToken: TOK, getUser: async ()=>({ username:"rithvik" }) } });
+    c.Router.keys().puterToken = TOK;
+    await c.StConn.verify("puter");
     const r = c.StConn.rows.puter;
     ok(r.state === "connected", "getUser — a resolving getUser turns the row green", JSON.stringify(r));
     ok(r.weak === false, "getUser — verification via getUser is not flagged weak");
     ok(/rithvik/.test(r.detail), "getUser — the row names the signed-in identity", r.detail);
-    return c.StConn.restore();
-  }).then(finish).catch(e=>{ fail++; failures.push("getUser path threw: " + e.message); finish(); });
-}
+  }
 
-// ---- 6. token presence alone must not be dressed up as proof ---------
-    const c6 = makeCtx({ puter:{ authToken: tok } });     // no whoami at all
-    c6.Router.keys().puterToken = tok;
-    return c6.StConn.verify("puter").then(()=>{
-      const r6 = c6.StConn.rows.puter;
-      ok(r6.weak === true, "verify — with no whoami surface the claim is marked weak",
-         JSON.stringify(r6));
-      ok(/unverified/.test(r6.detail), "verify — the detail text says 'unverified'", r6.detail);
-      step7();
-    });
-  }).catch(e=>{ fail++; failures.push("verify — success path threw: " + e.message); step7(); });
-}
+  // 6b. with no verification surface at all, the claim must be marked weak
+  {
+    const c = makeCtx({ puter:{ authToken: TOK } });
+    c.Router.keys().puterToken = TOK;
+    await c.StConn.verify("puter");
+    const r = c.StConn.rows.puter;
+    ok(r.weak === true, "verify — with no verification surface the claim is marked weak", JSON.stringify(r));
+    ok(/unverified/.test(r.detail), "verify — the detail text says 'unverified'", r.detail);
+  }
 
-function step7(){
-  // ---- 7. forget really forgets ------------------------------------------
-  const tok = "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHH";
-  const c7 = makeCtx({ puter:{ authToken: tok } });
-  c7.StConn.capture("t");
-  ok(c7.Router.keys().puterToken === tok, "forget — pre: the authority is stored");
-  c7.StConn.forget("puter");
-  eq(c7.Router.keys().puterToken, undefined, "forget — the authority is deleted");
-  eq(c7.StConn.rows.puter.state, "off", "forget — the row returns to off");
+  // 7. forget really forgets
+  {
+    const c = makeCtx({ puter:{ authToken: TOK } });
+    c.StConn.capture("t");
+    ok(c.Router.keys().puterToken === TOK, "forget — pre: the authority is stored");
+    c.StConn.forget("puter");
+    eq(c.Router.keys().puterToken, undefined, "forget — the authority is deleted");
+    eq(c.StConn.rows.puter.state, "off", "forget — the row returns to off");
+  }
 
-  // ---- 8. key providers are honest too ------------------------------------
-  const c8 = makeCtx({ probe:{ groq:true, pollinations:false } });
-  (c8.StConn.verify("groq"), c8.StConn.rows.groq.state, "off",
-     "key provider — no key means off, never green");
-  c8.Router.keys().groq = "gsk_testkey_0123456789";
-  return c8.StConn.verify("groq").then(()=>{
-    ok(c8.StConn.rows.groq.state === "connected", "key provider — a valid key turns it green",
-       JSON.stringify(c8.StConn.rows.groq));
-    return c8.StConn.verify("pollinations");
-  }).then(()=>{
-    eq(c8.StConn.rows.pollinations.state, "error",
+  // 8. key and keyless providers are held to the same rule
+  {
+    const c = makeCtx({ probe:{ groq:true, pollinations:false } });
+    c.StConn.verify("groq");
+    eq(c.StConn.rows.groq.state, "off", "key provider — no key means off, never green");
+    c.Router.keys().groq = "gsk_testkey_0123456789";
+    await c.StConn.verify("groq");
+    ok(c.StConn.rows.groq.state === "connected", "key provider — a valid key turns it green",
+       JSON.stringify(c.StConn.rows.groq));
+    await c.StConn.verify("pollinations");
+    eq(c.StConn.rows.pollinations.state, "error",
        "keyless — a failing probe shows red, not green (Pollinations 403s today)");
-    ok(c8.probes.indexOf("pollinations") >= 0, "keyless — the probe really ran");
-    return c8.StConn.verify("local");
-  }).then(()=>{
-    eq(c8.StConn.rows.local.state, "connected", "local rule engine — always connected");
-    step9();
-  }).catch(e=>{ fail++; failures.push("key provider path threw: " + e.message); step9(); });
-}
+    ok(c.probes.indexOf("pollinations") >= 0, "keyless — the probe really ran");
+    await c.StConn.verify("local");
+    eq(c.StConn.rows.local.state, "connected", "local rule engine — always connected");
+  }
 
-function step9(){
-  // ---- 9. the audit trail never carries the secret -----------------------
-  const tok = "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHH";
-  const c9 = makeCtx({ puter:{ authToken: tok } });
-  c9.StConn.capture("audit");
-  c9.StConn.forget("puter");
-  const blob = JSON.stringify(c9.logs);
-  ok(c9.logs.length >= 2, "audit — capture and forget are both recorded", "n=" + c9.logs.length);
-  ok(blob.indexOf(tok) < 0, "audit — no log entry contains the token", blob.slice(0, 300));
-  ok(/"studio_conn"/.test(blob), "audit — entries use the studio_conn intent");
-  ok(blob.indexOf("autocapture") >= 0 && blob.indexOf("forget") >= 0,
-     "audit — capture and forget are distinguishable in the trail");
+  // 9. the audit trail never carries the secret
+  {
+    const c = makeCtx({ puter:{ authToken: TOK } });
+    c.StConn.capture("audit");
+    c.StConn.forget("puter");
+    const blob = JSON.stringify(c.logs);
+    ok(c.logs.length >= 2, "audit — capture and forget are both recorded", "n=" + c.logs.length);
+    ok(blob.indexOf(TOK) < 0, "audit — no log entry contains the token", blob.slice(0, 300));
+    ok(/"studio_conn"/.test(blob), "audit — entries use the studio_conn intent");
+    ok(blob.indexOf("autocapture") >= 0 && blob.indexOf("forget") >= 0,
+       "audit — capture and forget are distinguishable in the trail");
+  }
 
-  // ---- 10. summary counts only what can actually be connected ------------
-  const c10 = makeCtx({});
-  const s = c10.StConn.summary();
-  eq(s.total, c10.StConn.SCORED.length, "summary — total excludes the offline local engine");
-  ok(c10.StConn.SCORED.indexOf("local") < 0, "summary — 'local' is not scored");
-  ok(c10.StConn.summary().live === 0, "summary — nothing is claimed live before any check");
+  // 10. summary counts only what can actually be connected
+  {
+    const c = makeCtx({});
+    const s = c.StConn.summary();
+    eq(s.total, c.StConn.SCORED.length, "summary — total excludes the offline local engine");
+    ok(c.StConn.SCORED.indexOf("local") < 0, "summary — 'local' is not scored");
+    ok(s.live === 0, "summary — nothing is claimed live before any check");
+  }
+
   report();
 }
+
+main().catch(e=>{ fail++; failures.push("harness crashed: " + (e && e.stack || e)); report(); });
 
 function report(){
   console.log(NL + "connection tests: " + pass + " passed, " + fail + " failed");

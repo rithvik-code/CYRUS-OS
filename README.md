@@ -263,8 +263,10 @@ Five intents, on purpose. Adding a sixth is the wrong next step until these five
 CYRUS OS/
 ├── .freebuff/
 │   ├── cyrus-os.html            ← the OS: boot to desktop, one file, no build
-│   ├── rebuild.js               ← deterministic Studio build (normalises CRLF, splices chunks, syntax-checks)
+│   ├── rebuild.js               ← deterministic Studio build (restores from HEAD, strips any prior studio block, splices chunks, syntax-checks)
 │   ├── validate_regex.js        ← compiles all 85 symbol regexes; a bad one fails the build, not the page
+│   ├── test_fixes.js            ← 90 assertions over the Quick Fix fixers, diagnostics and symbol families
+│   ├── test_conn.js             ← 53 assertions over provider authority: capture, verify, forget, audit secrecy
 │   ├── studio_p*.js             ← Studio source chunks, one per phase
 │   └── cyrus-architecture.html  ← visual map of the layers
 ├── cyrus/                       ← the native Python command layer

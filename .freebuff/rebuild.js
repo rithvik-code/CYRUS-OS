@@ -2,6 +2,8 @@
 const fs = require("fs");
 const { execSync } = require("child_process");
 const FILE = ".freebuff/cyrus-os.html";
+const MARK = "/*STUDIO_INSERT*/";
+const CSS_A = "/*STUDIO_CSS_START*/", CSS_B = "/*STUDIO_CSS_END*/";
 
 // Restore from HEAD, not from the index: `git checkout -- <file>` restores the
 // working tree from the staged version, and if a previous build ever got staged
@@ -19,11 +21,43 @@ function once(needle, insert) {
   h = h.slice(0, at) + insert + h.slice(at);
 }
 
+// Make the build idempotent. A previous build (or an auto-commit of built
+// output) can leave a studio block already spliced into the restored file;
+// stripping it first keeps the marker unique no matter what git hands back.
+const STAMP = "//  CYRUS STUDIO v2 — the IDE";
+let si = h.indexOf(STAMP);
+if(si >= 0){
+  const mi = h.indexOf(MARK, si);
+  if(mi >= 0){
+    h = h.slice(0, si) + h.slice(mi + MARK.length);
+    console.log("· stripped a previously injected studio block");
+  }
+}
+
+// The studio CSS is injected into <style>, outside the marker-delimited block
+// above, so it needs its own sentinels or every build stacks another copy.
+// Builds made before the sentinels existed left a verbatim copy behind, so
+// remove those too — otherwise they accumulate on every rebuild.
+{
+  const body = css.trim();
+  let guard = 0;
+  while(h.indexOf(body) >= 0 && guard++ < 10){
+    const i = h.indexOf(body);
+    h = h.slice(0, i) + h.slice(i + body.length);
+    console.log("· removed a legacy studio stylesheet copy");
+  }
+  const cs = h.indexOf(CSS_A), ce = h.indexOf(CSS_B);
+  if(cs >= 0 && ce > cs){
+    h = h.slice(0, cs) + h.slice(ce + CSS_B.length);
+    console.log("· stripped a previously injected studio stylesheet");
+  }
+}
+
 once("  --radius:12px;\n}",
   "\n  --st-mono:\"JetBrains Mono\",\"Cascadia Code\",Consolas,\"SF Mono\",Menlo,monospace;\n}");
-once(".st-status .tb-btn{font-size:11px;padding:3px 10px}\n", "\n" + css + "\n");
+once(".st-status .tb-btn{font-size:11px;padding:3px 10px}\n",
+  "\n" + CSS_A + "\n" + css + "\n" + CSS_B + "\n");
 
-const MARK = "/*STUDIO_INSERT*/";
 once("// --- CYRUS Studio (VS Code + Cursor style IDE: explorer, tabs, runner, AI copilot)\n",
   "// ============================================================================\n" +
   "//  CYRUS STUDIO v2 — the IDE\n" +
