@@ -18,6 +18,8 @@
 }
   --st-mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
 }
+  --st-mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
+}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -663,7 +665,108 @@ kbd{background:var(--panel3);border:1px solid var(--border2);border-bottom-width
 .st2-conn-note{margin:8px 0;font-size:10.5px;color:#6f6690;line-height:1.65}
 .st2-conn-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 
+/* ============================================================ OS PHASE 10-14 */
+/* Locations / mounts */
+.mp{padding:4px 2px}
+.mp-h{font-size:12.5px;line-height:1.6;color:var(--muted);margin:0 0 12px}
+.mp-k{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:#6f6690;margin:14px 0 7px}
+.mp-row{display:block;width:100%;text-align:left;background:#1a1130;border:1px solid #2c2150;
+  border-radius:9px;padding:10px 12px;margin-bottom:7px;cursor:pointer;color:var(--text);font:inherit}
+.mp-row:hover{border-color:var(--accent);background:#221640}
+.mp-row b{display:block;font-size:13px;font-weight:600}
+.mp-row span{display:block;font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:2px}
+.mp-row.off{opacity:.5;cursor:not-allowed}
+.mp-row.live{cursor:default;border-color:#2e6b45}
+.mp-row.live:hover{border-color:#2e6b45;background:#1a1130}
+.mp-un{float:right;font-size:10.5px;background:none;border:1px solid #463a6b;color:#b9aee0;
+  border-radius:6px;padding:2px 7px;cursor:pointer;margin-top:-2px}
+.mp-un:hover{border-color:#e1706b;color:#e1706b}
+.mp-cur{font-size:12px;color:var(--muted);padding:6px 2px}
+.mp-cur.dim{opacity:.65}
+.mp-note{font-size:11px;color:#6f6690;line-height:1.55;margin-top:12px;
+  border-left:2px solid #2c2150;padding-left:9px}
+.cyrus-mnt-badge{position:fixed;right:10px;bottom:8px;z-index:60;font-size:10.5px;
+  background:rgba(26,17,48,.94);border:1px solid #3a2c5e;color:#9b8ec9;
+  border-radius:999px;padding:3px 11px;cursor:pointer;font-family:var(--st-mono,monospace)}
+.cyrus-mnt-badge:hover{border-color:var(--accent);color:var(--accent)}
+
+/* System panel */
+.cyr-sys{padding:12px 14px;overflow:auto;height:100%}
+.cyr-sys-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.cyr-sys-src{font-size:11px;color:var(--muted);margin-left:auto}
+.cyr-sys-g{margin-bottom:16px}
+.cyr-sys-g h4{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:#6f6690;
+  margin:0 0 6px;padding-bottom:4px;border-bottom:1px solid #241a44}
+.cyr-sys-r{display:grid;grid-template-columns:150px 1fr 78px;gap:4px 10px;padding:6px 8px;
+  border-radius:6px;align-items:baseline}
+.cyr-sys-r:nth-child(odd){background:rgba(255,255,255,.022)}
+.cyr-sys-r .k{font-size:12px;color:var(--muted)}
+.cyr-sys-r .v{font-size:12.5px;font-family:var(--st-mono,monospace);color:var(--text);word-break:break-word}
+.cyr-sys-r .p{font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;text-align:right;color:#3f8f5e}
+.cyr-sys-r .n{grid-column:2/4;font-size:10.5px;color:#6f6690;line-height:1.45}
+.cyr-sys-r.unavailable .v{color:#6f6690;font-style:italic}
+.cyr-sys-r.unavailable .p{color:#8a5a3a}
+
+/* Snapshots */
+.cyr-snap{padding:12px 14px;overflow:auto;height:100%}
+.cyr-snap-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.cyr-snap-n{font-size:10.5px;color:#6f6690;margin-left:auto}
+.cyr-snap-r{border:1px solid #2c2150;border-radius:9px;padding:9px 11px;margin-bottom:7px;background:rgba(255,255,255,.02)}
+.cyr-snap-r:hover{border-color:#3d2f66}
+.cyr-snap-r .l{font-size:12.5px;font-weight:600}
+.cyr-snap-r .m{font-size:10.5px;color:var(--muted);margin-top:2px}
+.cyr-snap-r .a{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.cyr-snap-r .a .btn{font-size:11px;padding:4px 10px}
+.cyr-snap-empty{font-size:12.5px;color:var(--muted);padding:22px 4px;line-height:1.6}
+
+/* Profiles */
+.cyr-prof{padding:12px 14px;overflow:auto;height:100%}
+.cyr-prof-blurb{font-size:12px;line-height:1.65;color:var(--muted);
+  border-left:2px solid var(--accent);padding-left:10px;margin:0 0 14px}
+.cyr-prof-r{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  border:1px solid #2c2150;border-radius:9px;padding:9px 11px;margin-bottom:6px}
+.cyr-prof-r b{font-size:13px}
+.cyr-prof-r span{font-size:11px;color:var(--muted);margin-left:7px}
+.cyr-prof-r em{display:block;font-size:10.5px;color:#6f6690;font-style:normal;margin-top:2px}
+.cyr-prof-r .a{display:flex;gap:5px;flex-shrink:0}
+.cyr-prof-r .a .btn{font-size:11px;padding:4px 9px}
+.cyr-prof-empty{font-size:12.5px;color:var(--muted);padding:18px 4px;line-height:1.6}
+.cyr-prof-new{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap}
+.cyr-prof-new input{flex:1;min-width:150px;background:#160e28;border:1px solid #2f2352;color:var(--text);
+  border-radius:7px;padding:7px 10px;font:inherit;font-size:12px}
+.cyr-prof-new input:focus{outline:none;border-color:var(--accent)}
+.cyr-prof-note{font-size:11px;color:#6f6690;margin-top:10px}
+
+/* Lock screen profile strip */
+.cyr-lock-profiles{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;justify-content:center}
+.cyr-lock-p{background:rgba(31,20,52,.9);border:1px solid #3a2c5e;color:var(--text);
+  border-radius:999px;padding:6px 16px;font:inherit;font-size:12.5px;cursor:pointer}
+.cyr-lock-p:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Offline */
+.cyr-off{padding:12px 14px;overflow:auto;height:100%}
+.cyr-off-h{font-size:13px;font-weight:600;padding:8px 11px;border-radius:8px;margin-bottom:10px}
+.cyr-off-h.ok{background:rgba(46,160,67,.14);color:#5fc97e;border:1px solid #2e6b45}
+.cyr-off-h.warn{background:rgba(210,153,34,.12);color:#d4a53f;border:1px solid #5c4a1e}
+.cyr-off-why{font-size:12px;line-height:1.6;color:var(--muted);margin:0 0 14px}
+.cyr-off-r{display:grid;grid-template-columns:1fr 130px;gap:2px 10px;padding:7px 8px;border-radius:6px;align-items:baseline}
+.cyr-off-r:nth-child(odd){background:rgba(255,255,255,.022)}
+.cyr-off-r .w{font-size:12px}
+.cyr-off-r .v{font-size:11px;text-align:right}
+.cyr-off-r .n{grid-column:1/3;font-size:10.5px;color:#6f6690}
+.cyr-off-r.ok .v{color:#5fc97e}
+.cyr-off-r.no .v{color:#e1706b}
+.cyr-off-r.maybe .v{color:#d4a53f}
+.cyr-off-sec{margin-top:16px;border-top:1px solid #241a44;padding-top:12px}
+.cyr-off-sec h4{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:#6f6690;margin:0 0 8px}
+.cyr-off-end{font-family:var(--st-mono,monospace);font-size:11.5px;color:var(--text);margin-bottom:8px;word-break:break-all}
+.cyr-off-out{background:#0b0618;border:1px solid #2a1f47;border-radius:7px;padding:9px;
+  font-family:var(--st-mono,monospace);font-size:11px;line-height:1.55;color:#cfc6ea;
+  white-space:pre-wrap;margin:9px 0 0;max-height:260px;overflow:auto}
+
 /*STUDIO_CSS_END*/
+
+
 
 
 
@@ -8583,7 +8686,1934 @@ const StConn = {
   },
   refreshAll(){ return this.restore(); },
 };
+// ============================================================================
+//  OS PHASE 10 — REAL DISK
+//  Phase 0 LANG · Phase 1 EDIT · Phase 2 XPL · Phase 3 PROJ · Phase 4 RUN
+//  Phase 5 AI · Phase 6 NAV · Phase 7 EXT · Phase 8 POLISH · Phase 10 DISK
+// ============================================================================
+//  What this adds, and what it deliberately does not do.
+//
+//  CYRUS used to have exactly one filesystem: an in-memory tree inside a
+//  localStorage JSON blob. Every window, the explorer and the shell talked to
+//  it and nothing else existed. That is why `ls /` could never show a real
+//  folder — there wasn't one to show.
+//
+//  This adds a `/mnt/<name>/...` namespace. A path under `/mnt/` is routed to a
+//  backend; every other path keeps hitting the original tree **byte for byte**.
+//  That is the whole trick. Nothing inside VFS was rewritten, no call site was
+//  edited, and with nothing mounted CYRUS behaves exactly as it did before.
+//
+//  THE MIRROR IS NOT OPTIONAL — READ THIS BEFORE EDITING
+//  ---------------------------------------------------
+//  VFS is synchronous. Every one of its callers — the Files app, `cat`, the
+//  Studio explorer, `rm` — expects a value back immediately. The three real
+//  backends are not synchronous: `showDirectoryPicker()` hands back a promise,
+//  and the bridge is HTTP. So a mount keeps a *mirror* of the real tree in
+//  memory, built by an async `scan()`. Reads come from the mirror; writes
+//  update the mirror immediately (so the rest of the OS sees a consistent
+//  filesystem) and are pushed to the real device in the background.
+//
+//  The consequence, stated plainly rather than hidden: between a `write()` and
+//  the push landing, a crash loses that write. `Mnt.flush()` resolves once
+//  everything has landed, and every mount shows its own last-sync time, so the
+//  window is visible rather than assumed away.
+//
+//  SAFETY
+//  ------
+//  A `showDirectoryPicker()` handle is scoped by the browser to the folder the
+//  user actually chose — a mount physically cannot escape its root. The bridge
+//  confines every path to `indexed_paths` in config.yaml and refuses to spawn a
+//  shell, so CYRUS still never hands the model a terminal. Both are audited
+//  through the same Log the rest of the OS uses.
+// ============================================================================
+
+// ------------------------------------------------ shared namespace
+// Every later OS phase hangs off this one object. Defined here because this is
+// the first chunk the build splices.
+const Cyrus = {
+  version:"p10-disk",
+  // Defer work that touches globals defined *after* the splice point.
+  // The marker sits at ~line 8586, but SCHEMAS / IntentEngine / Actions are
+  // declared ~line 10100+, so a chunk that reads them at load time would throw
+  // a temporal-dead-zone ReferenceError. `onReady` fires after the whole script
+  // has run.
+  _ready:[], _readyFired:false,
+  onReady(fn){ if(this._readyFired){ try{ fn(); }catch(e){ console.error("[cyrus:onReady]",e); } } else this._ready.push(fn); },
+  fireReady(){ if(this._readyFired) return; this._readyFired=true; this._ready.splice(0).forEach(fn=>{ try{ fn(); }catch(e){ console.error("[cyrus:onReady]",e); } }); },
+  el(tag, cls, html){ const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; },
+  // `esc`, `fmtSize`, `sleep`, `Log`, `Toast`, `Modal`, `VFS`, `Store`, `Apps`,
+  // `WM`, `Bus`, `CMDS`, `MAN` are all declared above the splice point and are
+  // reachable directly. Anything below it must go through `onReady`.
+  audit(user_text, intent, fields, risk, confirmed, ok, message){
+    try{ Log.record(user_text, intent, fields, risk, confirmed, ok, message); }catch(e){ console.error("[cyrus:audit]",e); }
+  },
+};
+// One timer after the script finishes is enough, and it costs no polling.
+if(typeof window!=="undefined") setTimeout(()=>Cyrus.fireReady(), 0);
+
+// A file too big to hold in the mirror is represented by size + mtime only.
+// 1 MB is well past what the editor or `cat` can usefully show in one go.
+const MIRROR_MAX = 1048576;
+
+// ============================================================================
+//  Mnt — the mount registry
+// ============================================================================
+const Mnt = {
+  // name -> { name, label, kind, root, perms:{read,write}, tree, ready,
+  //           lastSync, error, backend, dirty:Set<relPath> }
+  mounts:new Map(),
+  LISTENERS:[],
+
+  get(name){ return this.mounts.get(name) || null; },
+  names(){ return [...this.mounts.keys()]; },
+  list(){ return [...this.mounts.values()]; },
+  onChange(fn){ this.LISTENERS.push(fn); },
+  emitChange(){ this.LISTENERS.forEach(f=>{ try{ f(); }catch(e){ console.error("[mnt:onChange]",e); } }); Bus.emit("mnt"); },
+
+  // Parse "/mnt/real/Documents/a.txt" into {mount, sub:"/Documents/a.txt"}.
+  // Returns null for any path that is not a mount path — which is the common
+  // case, and the reason this is cheap to put in front of every VFS call.
+  parse(path){
+    if(typeof path!=="string" || path.indexOf("/mnt/")!==0) return null;
+    const rest = path.slice(5);                 // strip "/mnt/"
+    const slash = rest.indexOf("/");
+    const name = slash<0 ? rest : rest.slice(0, slash);
+    if(!name) return null;
+    const m = this.mounts.get(name);
+    if(!m) return null;
+    const sub = slash<0 ? "/" : ("/" + rest.slice(slash+1));
+    return { mount:m, name, sub };
+  },
+  isMounted(path){ return !!this.parse(path); },
+
+  // "/mnt" itself lists the mounts; everything under it is a mount path.
+  normalize(base, p){
+    if(typeof p!=="string" || p==="") return base;
+    let out = p.startsWith("/") ? p : (base+"/"+p);
+    out = VFS.norm(base, out);
+    if(out==="/mnt") return out;
+    if(out.startsWith("/mnt/")) return out.replace(/\/+$/,"") || "/mnt";
+    return out;
+  },
+
+  // ---- lifecycle -----------------------------------------------------------
+  async mount(name, opts){
+    const kind = opts.kind;
+    const backend = this.backendFor(kind);
+    if(!backend) throw new Error("no backend for kind: " + kind);
+    const handle = opts.handle || await backend.acquire(opts);
+    if(!handle) throw new Error("no handle — permission or a cancelled picker");
+    const m = {
+      name, label: opts.label || name, kind,
+      root: handle,
+      perms: { read: opts.read!==false, write: opts.write!==false },
+      tree: mkDirNode("/", {}),
+      ready:false, error:null, lastSync:0, dirty:new Set(),
+      async scan(){ return backend.scan(handle); },
+      backend,
+    };
+    this.mounts.set(name, m);
+    await this.refresh(name);
+    Cyrus.audit("mount "+name, "mount_disk", {kind, name}, "medium", true, true,
+               "Mounted a real location as /mnt/"+name);
+    this.emitChange();
+    return m;
+  },
+
+  unmount(name){
+    const m = this.mounts.get(name);
+    if(!m) return false;
+    this.mounts.delete(name);
+    Cyrus.audit("umount "+name, "unmount_disk", {name}, "medium", true, true,
+               "Unmounted /mnt/"+name);
+    this.emitChange();
+    return true;
+  },
+
+  // Re-read the real tree into the mirror. Called on mount, on demand from the
+  // System panel, and after any operation that could have changed the disk
+  // behind our back (someone in Explorer, a build finishing, the bridge running
+  // a registered script).
+  async refresh(name){
+    const m = this.mounts.get(name);
+    if(!m) return null;
+    try{
+      m.tree = await m.scan();
+      m.ready = true; m.error = null; m.lastSync = Date.now();
+    }catch(e){
+      m.error = e && e.message ? e.message : String(e);
+      m.ready = false;
+      console.error("[mnt:refresh:"+name+"]", e);
+    }
+    return m;
+  },
+
+  // Resolve once every pending write has reached the real device. Anything that
+  // must not lose work awaits this first.
+  async flush(){
+    const jobs = [];
+    for(const m of this.mounts.values()){
+      for(const rel of Array.from(m.dirty)){
+        m.dirty.delete(rel);
+        const node = nodeAt(m.tree, rel);
+        jobs.push(m.backend.write(m.root, rel, node ? node.content : "")
+          .catch(e=>{ m.error = e.message || String(e); console.error("[mnt:write]",e); }));
+      }
+    }
+    await Promise.all(jobs);
+    return jobs.length;
+  },
+
+  backendFor(kind){ return BACKENDS[kind] || null; },
+  available(){ return Object.keys(BACKENDS).filter(k => BACKENDS[k].available()); },
+};
+
+// ---- tiny tree helpers (mirror format mirrors the VFS node shape exactly) ----
+function mkDirNode(name, children){ return { type:"dir", name, children:children||{}, mtime:Date.now() }; }
+function mkFileNode(name, content, size, mtime){
+  return { type:"file", name, ext:(name.split(".").pop()||"").toLowerCase(),
+           content: content==null ? null : String(content),
+           size: size!=null ? size : String(content==null?"":content).length,
+           mtime: mtime || Date.now(), mirrored:true };
+}
+function nodeAt(root, rel){
+  let cur = root;
+  for(const seg of String(rel).split("/").filter(Boolean)){
+    if(!cur || cur.type!=="dir") return null;
+    cur = cur.children[seg];
+  }
+  return cur || null;
+}
+function ensureDir(root, rel){
+  let cur = root;
+  for(const seg of String(rel).split("/").filter(Boolean)){
+    if(!cur.children[seg] || cur.children[seg].type!=="dir") cur.children[seg] = mkDirNode(seg,{});
+    cur = cur.children[seg];
+  }
+  return cur;
+}
+
+// ============================================================================
+//  Backends — all async, all normalised to the same three operations
+// ============================================================================
+const BACKENDS = {
+
+  // ---- the original in-browser tree, exposed as a mount -------------------
+  // Not offered in the picker (it is always reachable at /), but defined so the
+  // bridge and the panels can talk about every location in one vocabulary.
+  vfs:{
+    label:"CYRUS disk (browser storage)",
+    available(){ return true; },
+    async acquire(){ return null; },
+    async scan(){ return VFS.node("/") ? VFS.node("/") : mkDirNode("/",{}); },
+    async write(){ throw new Error("the CYRUS disk is written through VFS directly"); },
+  },
+
+  // ---- File System Access API: a real folder the user picked ---------------
+  fsapi:{
+    label:"Real folder (this device)",
+    available(){ return typeof window!=="undefined" && typeof window.showDirectoryPicker==="function"; },
+    hint:"Needs Chrome/Edge (or another Chromium browser) on a real page — a file:// tab has no picker.",
+    async acquire(){
+      return await window.showDirectoryPicker({ mode:"readwrite", id:"cyrus-root", startIn:"documents" });
+    },
+    async scan(dir){
+      const out = mkDirNode("/", {});
+      await walkFs(dir, "", out, 0);
+      return out;
+    },
+    async write(dir, rel, content){
+      const parts = String(rel).split("/").filter(Boolean);
+      if(!parts.length) return;
+      let d = dir;
+      for(let i=0;i<parts.length-1;i++) d = await d.getDirectoryHandle(parts[i], {create:true});
+      const fh = await d.getFileHandle(parts[parts.length-1], {create:true});
+      const w = await fh.createWritable();
+      await w.write(content==null? "" : String(content));
+      await w.close();
+    },
+    async remove(dir, rel){
+      const parts = String(rel).split("/").filter(Boolean);
+      let d = dir;
+      for(let i=0;i<parts.length-1;i++) d = await d.getDirectoryHandle(parts[i]);
+      await d.removeEntry(parts[parts.length-1], {recursive:true});
+    },
+    async mkdir(dir, rel){ await ensureFsDir(dir, rel); },
+    async move(dir, from, to){
+      // The File System Access API has no rename, and there is no cross-device
+      // move. Read-then-write is honest and correct; it is not atomic.
+      const src = await nodeAt(await this.scan(dir), from);
+      await this.write(dir, to, src && src.content!=null ? src.content : "");
+    },
+  },
+
+  // ---- Origin Private File System: real files, private to this origin ------
+  opfs:{
+    label:"OPFS (private to this browser)",
+    available(){ return !!(navigator.storage && navigator.storage.getDirectory); },
+    hint:"Real files with no picker. Private to this browser profile; clearing site data deletes them.",
+    async acquire(){
+      const root = await navigator.storage.getDirectory();
+      return root.getDirectoryHandle("cyrus", {create:true});
+    },
+    async scan(dir){ const out = mkDirNode("/",{}); await walkFs(dir, "", out, 0); return out; },
+    async write(dir, rel, content){
+      const parts = String(rel).split("/").filter(Boolean);
+      if(!parts.length) return;
+      let d = dir;
+      for(let i=0;i<parts.length-1;i++) d = await d.getDirectoryHandle(parts[i], {create:true});
+      const fh = await d.getFileHandle(parts[parts.length-1], {create:true});
+      const w = await fh.createWritable(); await w.write(content==null? "" : String(content)); await w.close();
+    },
+    async remove(dir, rel){
+      const parts = String(rel).split("/").filter(Boolean);
+      let d = dir;
+      for(let i=0;i<parts.length-1;i++) d = await d.getDirectoryHandle(parts[i]);
+      await d.removeEntry(parts[parts.length-1], {recursive:true});
+    },
+    async mkdir(dir, rel){ await ensureFsDir(dir, rel); },
+    async move(dir, from, to){ return BACKENDS.fsapi.move.call(this, dir, from, to); },
+  },
+
+  // ---- the optional local daemon ------------------------------------------
+  bridge:{
+    label:"CYRUS bridge (localhost)",
+    available(){ return typeof location!=="undefined" && /^https?:$/.test(location.protocol); },
+    hint:"Run `python -m cyrus.bridge` on this machine. Confined to indexed_paths; no shell.",
+    async acquire(){ await Bridge.probe(); if(!Bridge.online) throw new Error(Bridge.lastError || "no bridge answered"); return {url:Bridge.url}; },
+    async scan(){
+      const tree = await Bridge.call("list", {path:"/"});
+      return tree && tree.tree ? tree.tree : mkDirNode("/",{});
+    },
+    async write(dir, rel, content){ await Bridge.call("write", {path:rel, content:content==null?"":String(content)}); },
+    async remove(dir, rel){ await Bridge.call("delete", {path:rel}); },
+    async mkdir(dir, rel){ await Bridge.call("mkdir", {path:rel}); },
+    async move(dir, from, to){
+      // The bridge has a real rename primitive; use it rather than read-write-delete,
+      // which would lose a file if the daemon died between the two calls.
+      await Bridge.call("move", {from, to});
+    },
+  },
+};
+
+// Shared recursive scan for the two File System Access style backends.
+const SCAN_MAX_FILES = 2000, SCAN_MAX_DEPTH = 12;
+async function walkFs(dir, prefix, out, depth){
+  if(depth > SCAN_MAX_DEPTH) return;
+  let count = 0;
+  for await(const [name, handle] of dir.entries()){
+    if(count++ > SCAN_MAX_FILES || out.__full) return;
+    const rel = prefix + "/" + name;
+    if(handle.kind === "directory"){
+      const sub = mkDirNode(name, {});
+      out.children[name] = sub;
+      await walkFs(handle, rel, sub, depth+1);
+      if(out.__full) return;
+    }else{
+      try{
+        const f = await handle.getFile();
+        if(f.size > MIRROR_MAX){
+          out.children[name] = mkFileNode(name, null, f.size, f.lastModified);
+        }else{
+          out.children[name] = mkFileNode(name, await f.text(), f.size, f.lastModified);
+        }
+      }catch(e){ out.children[name] = mkFileNode(name, null, 0, Date.now()); }
+    }
+  }
+}
+async function ensureFsDir(dir, rel){
+  let d = dir;
+  for(const seg of String(rel).split("/").filter(Boolean)) d = await d.getDirectoryHandle(seg, {create:true});
+  return d;
+}
+
+// ============================================================================
+//  Bridge — loopback client for the optional daemon
+// ============================================================================
+//  The daemon is not a shell. It exposes six file verbs plus `sensors`, and it
+//  re-enforces the same whitelist and path confinement that
+//  cyrus/cyrus/actions.py already applies on the native side. A second
+//  enforcement of an existing boundary — not a new one.
+const Bridge = {
+  url: localStorage.getItem("cyrus_bridge_url") || "",
+  token: sessionStorage.getItem("cyrus_bridge_token") || "",
+  online:false, lastError:"", roots:[], version:"", lastSeen:0,
+
+  save(){ try{ localStorage.setItem("cyrus_bridge_url", this.url||""); }catch(e){} },
+  saveToken(){ try{ sessionStorage.setItem("cyrus_bridge_token", this.token||""); }catch(e){} },
+
+  async call(op, args){
+    if(!this.url) throw new Error("no bridge URL — start one in Settings → System");
+    let r;
+    try{
+      r = await fetch(this.url + op, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "X-Cyrus-Token":this.token },
+        body: JSON.stringify(args || {}),
+      });
+    }catch(e){
+      this.online = false;
+      // A refused connection and a wrong origin look identical to fetch(). Say
+      // which one it most likely is instead of showing a bare "failed".
+      this.lastError = "could not reach " + this.url + " — is `python -m cyrus.bridge` running?";
+      throw new Error(this.lastError);
+    }
+    let body;
+    try{ body = await r.json(); }catch(e){ body = {ok:false, error:"bridge sent a non-JSON reply"}; }
+    if(!r.ok || body.ok === false){
+      this.lastError = body.error || ("bridge returned " + r.status);
+      throw new Error(this.lastError);
+    }
+    this.online = true; this.lastSeen = Date.now();
+    return body.result || {};
+  },
+
+  async probe(){
+    if(!this.url){ this.online=false; this.lastError="no bridge URL configured"; return false; }
+    try{
+      const b = await this.call("ping", {});
+      this.online = true; this.lastError = "";
+      this.roots = b.roots || []; this.version = b.version || "";
+      return true;
+    }catch(e){ this.online = false; this.lastError = e.message || String(e); return false; }
+  },
+
+  // The daemon reports where it found its token; the OS can tell the user
+  // exactly what to do instead of "not connected".
+  async adopt(token, url){
+    this.token = token || ""; if(url) this.url = url;
+    this.saveToken(); this.save();
+    return await this.probe();
+  },
+};
+
+// ============================================================================
+//  VFS interception
+// ============================================================================
+//  Only these four methods change. `norm`, `parent`, `base`, `walk`,
+//  `allFiles` and `sizeOf` keep their original implementations and work
+//  unchanged over both trees, which is why nothing else in the OS had to be
+//  touched.
+(function patchVFS(){
+  const origNode    = VFS.node;
+  const origWrite   = VFS.writeFile;
+  const origMkdirp  = VFS.mkdirp;
+  const origRemove  = VFS.remove;
+
+  VFS.node = function(path){
+    const p = Mnt.parse(path);
+    if(!p) return origNode.call(this, path);
+    if(p.sub === "/") return p.mount.tree;
+    return nodeAt(p.mount.tree, p.sub);
+  };
+
+  VFS.writeFile = function(path, content){
+    const p = Mnt.parse(path);
+    if(!p) return origWrite.call(this, path, content);
+    const m = p.mount;
+    if(!m.perms.write){ throw new Error("mount /mnt/"+p.name+" is read-only"); }
+    if(p.sub === "/") return false;
+    const dir = ensureDir(m.tree, VFS.parent(p.sub));
+    const name = VFS.base(p.sub);
+    if(dir.children[name] && dir.children[name].type === "dir") return false;
+    dir.children[name] = mkFileNode(name, content);
+    m.dirty.add(p.sub);                       // pushed on flush()
+    Bus.emit("vfs"); Mnt.emitChange();
+    return true;
+  };
+
+  VFS.mkdirp = function(path){
+    const p = Mnt.parse(path);
+    if(!p) return origMkdirp.call(this, path);
+    const m = p.mount;
+    if(!m.perms.write) return null;
+    const d = ensureDir(m.tree, p.sub);
+    m.dirty.add(p.sub);
+    Bus.emit("vfs"); Mnt.emitChange();
+    return d;
+  };
+
+  VFS.remove = function(path){
+    const p = Mnt.parse(path);
+    if(!p) return origRemove.call(this, path);
+    const m = p.mount;
+    if(!m.perms.write) return false;
+    const node = nodeAt(m.tree, p.sub);
+    if(!node) return false;
+    const parent = VFS.parent(p.sub);
+    if(parent === p.sub || p.sub === "/") return false;
+    delete nodeAt(m.tree, parent).children[VFS.base(p.sub)];
+    m.dirty.add("!" + p.sub);                 // "!" prefix marks a removal
+    Bus.emit("vfs"); Mnt.emitChange();
+    return true;
+  };
+})();
+
+// Push removals (and writes) down to the real device. Anything after this
+// point is a real effect on a real disk, so it is audited as one.
+Mnt.flush = async function(){
+  let n = 0;
+  for(const m of Mnt.mounts.values()){
+    for(const rel of Array.from(m.dirty)){
+      m.dirty.delete(rel);
+      try{
+        if(rel.charAt(0) === "!"){ await m.backend.remove(m.root, rel.slice(1)); n++; }
+        else {
+          const node = nodeAt(m.tree, rel);
+          await m.backend.write(m.root, rel, node && node.content != null ? node.content : "");
+          n++;
+        }
+      }catch(e){ m.error = e.message || String(e); console.error("[mnt:flush]", e); }
+    }
+    m.lastSync = Date.now();
+  }
+  if(n) Mnt.emitChange();
+  return n;
+};
+
+// ============================================================================
+//  Shell integration
+// ============================================================================
+Object.assign(MAN, {
+  mount:"mount — list real locations, or `mount --pick [name]` to grant CYRUS a folder on this device.",
+  umount:"umount <name> — detach /mnt/<name>.",
+  mounts:"mounts — every mounted location, its kind, its permissions and when it last synced.",
+  sync:"sync [name] — re-read a real location, or flush pending writes when called with no argument.",
+  df:"df -h — real storage: this origin's quota from the browser, and every real disk the bridge reports.",
+});
+
+Object.assign(CMDS, {
+  mount:{
+    man:"mount",
+    async run(a, s, pr){
+      if(a.length === 1 && (a[0]==="--pick" || a[0]==="-p")){
+        await MntPicker.show();
+        return;
+      }
+      const rows = Mnt.list();
+      if(!rows.length){
+        return pr("Nothing is mounted.\n\nCYRUS disk is always available at /.\n"+
+                  "Add a real location:  mount --pick\n"+
+                  "Or from Settings → System → Locations.");
+      }
+      pr("MOUNT                       KIND      ACCESS   LAST SYNC");
+      for(const m of rows){
+        const t = m.lastSync ? new Date(m.lastSync).toLocaleTimeString() : "never";
+        pr((("/mnt/"+m.name).padEnd(27)) + m.kind.padEnd(9) +
+           ((m.perms.read?"r":"")+(m.perms.write?"w":"-")).padEnd(9) + t);
+      }
+    }
+  },
+  umount:{
+    man:"umount",
+    run(a, s, pr){
+      if(!a[0]) return pr("umount: name a mount, e.g. `umount real`", "err");
+      const name = String(a[0]).replace(/^\/mnt\//,"").replace(/\/+$/,"");
+      return pr(Mnt.unmount(name) ? ("unmounted /mnt/"+name) : ("umount: " + name + ": not mounted"), Mnt.get(name)?null:"err");
+    }
+  },
+  mounts:{
+    man:"mounts",
+    run(a, s, pr){
+      const rows = Mnt.list();
+      if(!rows.length) return pr("no real locations mounted (the CYRUS disk at / is always present)");
+      rows.forEach(m=>pr(("/mnt/"+m.name).padEnd(18) + m.kind.padEnd(10) + (m.ready?"mounted":"error") +
+                         (m.error? " — " + m.error : "")));
+    }
+  },
+  sync:{
+    man:"sync",
+    async run(a, s, pr){
+      const flushed = await Mnt.flush();
+      if(flushed) pr("flushed " + flushed + " change(s) to the real device");
+      if(a[0]){
+        const m = Mnt.get(String(a[0]).replace(/^\/mnt\//,""));
+        if(!m) return pr("sync: no such mount: " + a[0], "err");
+        await Mnt.refresh(m.name);
+        return pr("re-read /mnt/" + m.name);
+      }
+      const rows = Mnt.list();
+      for(const m of rows) await Mnt.refresh(m.name);
+      pr(rows.length ? ("re-read " + rows.length + " mount(s)") : "nothing mounted to sync");
+    }
+  },
+  df:{
+    man:"df -h",
+    async run(a, s, pr){
+      pr(await DiskUsage.report());
+    }
+  },
+});
+
+// ============================================================================
+//  Real storage figures — no invented numbers
+// ============================================================================
+//  The old system_report answered this question with a literal "512 GB".
+//  Anything that cannot be measured says so instead of guessing.
+const DiskUsage = {
+  async browser(){
+    try{
+      const est = await navigator.storage.estimate();
+      return { ok:true, usage:est.usage||0, quota:est.quota||0 };
+    }catch(e){ return { ok:false, error:e.message||String(e) }; }
+  },
+  async report(){
+    const L = [];
+    L.push("Filesystem            Size       Used      Avail    Source");
+    const b = await this.browser();
+    // storage.estimate() and psutil both report BYTES; fmtSize expects KILOBYTES.
+    // pad() truncates when it runs out of room, and "157.5 G" is ambiguous
+    // enough to be wrong, so these columns are sized to hold a full unit.
+    if(b.ok && b.quota){
+      const pct = b.quota ? Math.round(b.usage/b.quota*100) : 0;
+      L.push(pad("this origin",14) + pad(fmtSize(b.quota/1024),10) + pad(fmtSize(b.usage/1024),10) +
+             pad(fmtSize(Math.max(0,b.quota-b.usage)/1024),9) + pct + "%  browser storage.estimate()");
+    }else{
+      L.push(pad("this origin",14) + "unknown       —          —         storage.estimate() unavailable: " + (b.error||"denied"));
+    }
+    if(Bridge.online || Bridge.url){
+      try{
+        const res = await Bridge.call("sensors", {});
+        (res.disks||[]).forEach(d=>{
+          L.push(pad("/mnt/"+(d.mount||"bridge"),14) + pad(fmtSize(d.total/1024),10) +
+                 pad(fmtSize(d.used/1024),10) + pad(fmtSize(Math.max(0,d.total-d.used)/1024),9) +
+                 (d.used&&d.total? " " + Math.round(d.used/d.total*100) + "%" : "") + "  bridge");
+        });
+      }catch(e){ L.push("bridge disks       unavailable — " + (e.message||e)); }
+    }
+    const m = Mnt.list().filter(x=>x.kind==="fsapi");
+    if(m.length) L.push("", m.map(x=>"/mnt/"+x.name+"        a real folder you granted — CYRUS cannot see outside it.").join("\n"));
+    return L.join("\n");
+  },
+};
+function pad(s, n){ s = String(s==null?"":s); return s.length>=n ? s.slice(0,n-1)+" " : s+" ".repeat(n-s.length); }
+
+// ============================================================================
+//  MntPicker — grant a real location
+// ============================================================================
+const MntPicker = {
+  async show(){
+    const rows = Mnt.list();
+    const kinds = [];
+    for(const k of ["fsapi","opfs","bridge"]){
+      const b = BACKENDS[k];
+      if(!b.available()){ kinds.push(`<div class="mp-row off"><b>${esc(b.label)}</b><span>unavailable in this browser</span></div>`); continue; }
+      kinds.push(`<button class="mp-row" data-k="${k}"><b>${esc(b.label)}</b><span>${esc(b.hint||"")}</span></button>`);
+    }
+    const cur = rows.length
+      ? rows.map(m=>`<div class="mp-row live"><b>/mnt/${esc(m.name)}</b><span>${esc(m.kind)} · ${m.perms.write?"read/write":"read-only"} · ` +
+                    `${m.ready?("synced " + new Date(m.lastSync).toLocaleTimeString()) : esc(m.error||"error")}</span>` +
+                    `<button class="mp-un" data-un="${esc(m.name)}">unmount</button></div>`).join("")
+      : `<div class="mp-cur dim">nothing mounted — the CYRUS disk at / is always present</div>`;
+
+    WM.open({
+      id:"cyrus-locations", title:"Locations", icon:"💾", w:520, h:460,
+      build(win){
+        win.body.innerHTML = `<div class="mp">
+          <p class="mp-h">CYRUS can read a real location on this device. The browser scopes the grant to the folder you pick — CYRUS cannot see outside it, and every write goes to the audit log.</p>
+          <div class="mp-k">MOUNTED</div>
+          <div class="mp-list">${cur}</div>
+          <div class="mp-k">ADD A LOCATION</div>
+          ${kinds.join("")}
+          <div class="mp-note">A folder you pick is deleted when you say so, from Finder or Explorer, like any other. CYRUS will show it as missing on the next refresh — that is a real state, not an error to hide.</div>
+        </div>`;
+        win.body.querySelectorAll("[data-k]").forEach(btn=>{
+          btn.addEventListener("click", async ()=>{
+            const kind = btn.dataset.k, name = kind;
+            const label = btn.querySelector("b").textContent;
+            btn.setAttribute("disabled","");
+            btn.querySelector("span").textContent = "Requesting permission…";
+            try{
+              await Mnt.mount(name, {kind, label:BACKENDS[kind].label});
+              Toast.show("Locations","Mounted at /mnt/"+name,null,"ok");
+              WM.close("cyrus-locations");
+            }catch(e){
+              btn.removeAttribute("disabled");
+              btn.querySelector("span").textContent = "Grant permission again — " + (e.message||e);
+              Toast.show("Locations","Not mounted — " + (e.message||e),null,"err");
+            }
+          });
+        });
+        win.body.querySelectorAll("[data-un]").forEach(b=>{
+          b.addEventListener("click", ()=>{ Mnt.unmount(b.dataset.un); WM.close("cyrus-locations"); MntPicker.show(); });
+        });
+      },
+    });
+    return true;
+  },
+};
+
+// ============================================================================
+//  Files — the Locations sidebar
+// ============================================================================
+//  CYRUS already had a Files app; this adds the root list above it rather than
+//  replacing it, so no existing window behaviour changes.
+Apps.register("locations", {
+  title:"Locations", icon:"💾",
+  launch(){ MntPicker.show(); }
+});
+
+function mountIndicator(){
+  let el$ = document.getElementById("cyrus-mnt-badge");
+  const on = Mnt.list().length;
+  if(!on){ if(el$) el$.remove(); return; }
+  if(!el$){
+    el$ = Cyrus.el("div","cyrus-mnt-badge","");
+    el$.id = "cyrus-mnt-badge";
+    el$.addEventListener("click", ()=>MntPicker.show());
+    document.body.appendChild(el$);
+  }
+  el$.innerHTML = "💾 " + Mnt.names().map(n=>"mnt/"+n).join("  ");
+  el$.title = Mnt.list().map(m=>"/mnt/"+m.name+" — "+m.kind+", "+(m.perms.write?"read/write":"read-only")+
+                                 ", synced "+(m.lastSync?new Date(m.lastSync).toLocaleTimeString():"never")).join("\n");
+}
+Mnt.onChange(mountIndicator);
+Cyrus.onReady(mountIndicator);
+
+// Push pending writes before the tab goes away. A browser cannot await on
+// unload, so `visibilitychange` is the honest hook: it fires when the user
+// actually switches away, and it is the last moment a page can still finish.
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState === "hidden"){ Mnt.flush(); }
+});
+window.addEventListener("pagehide", ()=>{ Mnt.flush(); });
+// ============================================================================
+//  OS PHASE 11 — SYSTEM
+//  Every measurement below carries where it came from. A number CYRUS cannot
+//  prove is rendered as "not reachable from a browser", never as a plausible
+//  guess.
+// ============================================================================
+//
+//  WHY THIS FILE EXISTS
+//  -------------------
+//  The intent `system_report` used to answer "what's using my disk and RAM?"
+//  with two string literals:
+//
+//      Total: 4.2 MB of 512 GB used (1%)
+//      Nothing is eating memory
+//
+//  Both were invented. The 512 GB never came from anywhere. This file replaces
+//  that with measurements that are either real or explicitly absent, and it
+//  records the provenance of each one so the next person can tell the
+//  difference without reading the source.
+//
+//  The rule this file holds to:
+//      A row is either MEASURED (and says how), or NOT REACHABLE (and says
+//      why). There is no third state.
+// ============================================================================
+
+// provenance: "browser" | "bridge" | "unavailable"
+// `note` is what the number is NOT, in plain words.
+const SysProbe = {
+  rows:[],
+
+  row(group, label, value, provenance, note){
+    this.rows.push({group, label, value, provenance, note});
+    return this.rows[this.rows.length-1];
+  },
+
+  reset(){ this.rows = []; return this; },
+
+  async all(){
+    this.reset();
+    await this.cpu();
+    await this.memory();
+    await this.storage();
+    await this.gpu();
+    await this.battery();
+    await this.network();
+    this.display();
+    await this.devices();
+    this.kernel();
+    return this.rows;
+  },
+
+  // ---- CPU -----------------------------------------------------------------
+  async cpu(){
+    const cores = navigator.hardwareConcurrency;
+    if(cores){
+      this.row("Processor", "Logical cores", String(cores), "browser",
+               "what the page is allowed to see — not the CPU model, not clocks");
+    }else{
+      this.row("Processor", "Logical cores", null, "unavailable", "hardwareConcurrency not exposed");
+    }
+    const mem = navigator.deviceMemory;
+    if(mem) this.row("Processor", "Device memory class", mem + " GB", "browser",
+                     "a coarse bucket (1/2/4/8), not a measurement of installed RAM");
+  },
+
+  // ---- Memory --------------------------------------------------------------
+  // `fmtSize` takes KILOBYTES. performance.memory, storage.estimate and psutil
+  // all report BYTES. Every conversion below is explicit because getting it
+  // wrong inflates a 4 MB heap into a convincing "4.0 GB".
+  async memory(){
+    const p = performance.memory;
+    if(p && p.usedJSHeapSize != null){
+      this.row("Memory", "JS heap in use", fmtSize(p.usedJSHeapSize/1024), "browser",
+               "this tab's JavaScript heap — not your physical RAM, and not what the OS is using");
+      if(p.jsHeapSizeLimit) this.row("Memory", "JS heap limit", fmtSize(p.jsHeapSizeLimit/1024), "browser",
+               "the engine's ceiling for this tab, not your installed memory");
+    }else{
+      this.row("Memory", "JS heap in use", null, "unavailable",
+               "performance.memory is not exposed in this browser (it is Chromium-only)");
+    }
+  },
+
+  // ---- Storage -------------------------------------------------------------
+  async storage(){
+    let est = null;
+    try{ est = await navigator.storage.estimate(); }catch(e){}
+    if(est && est.quota){
+      const pct = Math.round((est.usage||0) / est.quota * 100);
+      this.row("Storage", "This origin", fmtSize((est.usage||0)/1024) + " of " + fmtSize(est.quota/1024) + " (" + pct + "%)",
+               "browser", "quota the browser grants this site — not your disk");
+    }else{
+      this.row("Storage", "This origin", null, "unavailable", "storage.estimate() denied or unsupported");
+    }
+    if(Bridge.online){
+      try{
+        const s = await Bridge.call("sensors", {});
+        (s.memory||[]).forEach(m=>{
+          this.row("Memory", "Physical " + (m.mount||"system"), fmtSize(m.used/1024) + " of " + fmtSize(m.total/1024),
+                   "bridge", "read from this machine by cyrus.bridge");
+        });
+        (s.disks||[]).forEach(d=>{
+          this.row("Storage", "Disk " + (d.mount||""), fmtSize(d.used/1024) + " of " + fmtSize(d.total/1024),
+                   "bridge", "real filesystem on this machine");
+        });
+      }catch(e){
+        this.row("Memory", "Physical memory", null, "unavailable", "bridge did not answer: " + (e.message||e));
+      }
+    }
+  },
+
+  // ---- GPU -----------------------------------------------------------------
+  async gpu(){
+    let info = null;
+    try{
+      if(navigator.gpu && navigator.gpu.requestAdapter){
+        const ad = await navigator.gpu.requestAdapter();
+        if(ad && ad.info) info = ad.info;
+      }
+    }catch(e){}
+    let unmasked = null;
+    try{
+      const c = document.createElement("canvas");
+      const gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+      if(gl){
+        const ext = gl.getExtension("WEBGL_debug_renderer_info");
+        if(ext) unmasked = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+      }
+    }catch(e){}
+    const v = (info && (info.vendor || info.architecture)) || unmasked;
+    if(v) this.row("Graphics", "Adapter", String(v), "browser",
+                   "which GPU is available — CYRUS cannot install or swap a driver");
+    else this.row("Graphics", "Adapter", null, "unavailable", "neither WebGPU adapter info nor WebGL renderer exposed");
+  },
+
+  // ---- Battery -------------------------------------------------------------
+  async battery(){
+    if(!navigator.getBattery){
+      this.row("Power", "Battery", null, "unavailable", "Battery Status API not available here");
+      return;
+    }
+    try{
+      const b = await navigator.getBattery();
+      if(b && typeof b.level === "number"){
+        this.row("Power", "Battery", Math.round(b.level*100) + "%" + (b.charging ? " (charging)" : ""),
+                 "browser", "many browsers deliberately report a fixed 100%");
+      }else{
+        this.row("Power", "Battery", null, "unavailable", "the browser declined to report a level");
+      }
+    }catch(e){ this.row("Power", "Battery", null, "unavailable", "Battery Status API blocked"); }
+  },
+
+  // ---- Network -------------------------------------------------------------
+  network(){
+    const c = navigator.connection;
+    if(c){
+      this.row("Network", "Connection", (c.effectiveType || "unknown") +
+               (c.downlink ? " · " + c.downlink + " Mb/s" : "") + (c.saveData ? " · data saver" : ""),
+               "browser", "a hint from the OS, not a measurement of throughput");
+    }else{
+      this.row("Network", "Connection", null, "unavailable", "Network Information API not available");
+    }
+    this.row("Network", "Origin", location.protocol + "//" + (location.host||"(no host)"), "browser",
+             "file:// means no service worker, no install, and cross-origin APIs need CORS");
+  },
+
+  // ---- Display -------------------------------------------------------------
+  display(){
+    if(typeof screen!=="undefined"){
+      this.row("Display", "Screen", screen.width + "×" + screen.height +
+               " @ " + (window.devicePixelRatio||1) + "×", "browser", "CSS pixels vs device pixels");
+    }
+  },
+
+  // ---- Devices: counts only, never control ---------------------------------
+  async devices(){
+    const add = async (label, fn, note)=>{
+      try{
+        const n = await fn();
+        if(n == null) throw new Error("no such API");
+        this.row("Devices", label, n === 0 ? "none connected" : n + " available", "browser", note);
+      }catch(e){
+        this.row("Devices", label, null, "unavailable", "not exposed in this browser");
+      }
+    };
+    await add("USB", ()=>navigator.usb && navigator.usb.getDevices().then(d=>d.length), "handles for devices you have already granted");
+    await add("Serial ports", ()=>navigator.serial && navigator.serial.getPorts().then(p=>p.length), "ports you have already granted");
+    await add("HID", ()=>navigator.hid && navigator.hid.getDevices().then(d=>d.length), "devices you have already granted");
+    await add("Bluetooth", ()=>navigator.bluetooth && navigator.bluetooth.getAvailability(), "available — CYRUS cannot pair without a user gesture");
+  },
+
+  // ---- The rows that will never turn green --------------------------------
+  //  Listing these is the point. A panel that only shows what it can do reads
+  //  as complete; this one is visibly incomplete, which is the truth.
+  kernel(){
+    this.row("Kernel", "Kernel modules", null, "unavailable", "a page cannot load or unload kernel modules");
+    this.row("Kernel", "Drivers", null, "unavailable", "driver installation needs an installer and an OS-level token");
+    this.row("Kernel", "BIOS / UEFI", null, "unavailable", "firmware settings are not addressable from a browser");
+    this.row("Kernel", "Filesystem repair", null, "unavailable", "fsck-style repair needs privileged raw disk access");
+    this.row("Kernel", "System users / permissions", null, "unavailable", "device profiles are not OS accounts");
+  },
+
+  // ---- Rendering -----------------------------------------------------------
+  text(){
+    if(!this.rows.length) return "Not measured yet.";
+    const out = [];
+    let group = null;
+    for(const r of this.rows){
+      if(r.group !== group){ group = r.group; out.push("", group.toUpperCase()); }
+      const v = r.provenance === "unavailable" ? "not reachable from a browser" : r.value;
+      // The status is never truncated — "not reachable from a brows" is worse
+      // than useless, it just looks like a rendering bug.
+      out.push("  " + pad(r.label, 24) + (v == null ? "" : String(v)) +
+               (r.provenance === "unavailable" ? " ·" : " ✓") +
+               "\n      " + (r.note||""));
+    }
+    return out.join("\n");
+  },
+};
+
+// ============================================================================
+//  The System app
+// ============================================================================
+Apps.register("system", {
+  title:"System", icon:"🖥️",
+  launch(){
+    WM.open({
+      id:"cyrus-system", title:"System", icon:"🖥️", w:660, h:560,
+      async build(win){
+        const body = Cyrus.el("div","cyr-sys");
+        win.body.appendChild(body);
+        const paint = async ()=>{
+          body.innerHTML = `<div class="cyr-sys-bar"><button class="btn ghost" id="cyr-refresh">Measure again</button>
+            <span class="cyr-sys-src">${Bridge.online ? "bridge connected" : "browser APIs only" + (Bridge.url ? " · bridge not answering" : "")}</span></div>
+            <div class="cyr-sys-rows">measuring…</div>`;
+          const rows = await SysProbe.all();
+          const groups = [];
+          for(const r of rows){ if(!groups.find(g=>g.name===r.group)) groups.push({name:r.group, rows:[]}); groups.find(g=>g.name===r.group).rows.push(r); }
+          body.querySelector(".cyr-sys-rows").innerHTML = groups.map(g=>
+            `<div class="cyr-sys-g"><h4>${esc(g.name)}</h4>` +
+            g.rows.map(r=>`<div class="cyr-sys-r ${r.provenance}">
+                <div class="k">${esc(r.label)}</div>
+                <div class="v">${esc(r.provenance==="unavailable" ? "not reachable from a browser" : r.value)}</div>
+                <div class="p">${esc(r.provenance==="unavailable" ? "unavailable" : r.provenance)}</div>
+                <div class="n">${esc(r.note||"")}</div></div>`).join("") +
+            `</div>`).join("");
+          body.querySelector("#cyr-refresh").addEventListener("click", paint);
+        };
+        paint();
+      },
+    });
+  }
+});
+
+// ============================================================================
+//  Replace the fabricated `system_report`
+// ============================================================================
+//  SCHEMAS / IntentEngine / Actions are declared ~1500 lines *after* this
+//  splice point, so touching them at load time would throw a TDZ error. onReady
+//  fires once the whole script has executed.
+Cyrus.onReady(()=>{
+  if(typeof Actions === "undefined" || !Actions.system_report) return;
+  Actions.system_report = async function(){
+    const rows = await SysProbe.all();
+    const measured = rows.filter(r => r.provenance !== "unavailable");
+    const missing  = rows.filter(r => r.provenance === "unavailable");
+
+    const L = [];
+    L.push("Measured just now, on this machine, from the browser");
+    L.push("");
+    for(const r of measured){
+      L.push("  " + pad(r.label, 24) + pad(String(r.value), 26) + "[" + r.provenance + "]");
+      L.push("      " + (r.note||""));
+    }
+    L.push("");
+    L.push("Not reachable from a browser (" + missing.length + " rows)");
+    for(const r of missing) L.push("  · " + pad(r.label, 24) + r.note);
+    L.push("");
+    L.push("Every number above was read from a live API. Nothing here is estimated.");
+    L.push("Open the System app for the same table with each row's provenance.");
+    return {ok:true, message:L.join("\n")};
+  };
+});
+// ============================================================================
+//  OS PHASE 12 — SNAPSHOTS
+//  Real recovery, so "this cannot be undone" stops being a disclaimer.
+// ============================================================================
+//
+//  WHAT WAS TRUE BEFORE
+//  --------------------
+//  CYRUS had persistence and an audit log, and that was the entirety of its
+//  answer to "what if I ruin something". The Studio delete dialog said:
+//
+//      Every delete is written to the audit log. This cannot be undone
+//      from inside Studio.
+//
+//  The audit log records what happened. It does not bring the file back.
+//
+//  WHAT THIS ADDS
+//  --------------
+//  A snapshot is a content-hashed copy of every file in the virtual filesystem.
+//  One is taken automatically before any medium/high-risk operation the policy
+//  gate classifies *and the user approves*, and on demand from the System app.
+//  Restoring writes a fresh snapshot first, so a bad restore is itself
+//  recoverable — the recovery path cannot be the thing that loses your work.
+//
+//  WHY AN INJECTABLE STORE
+//  -----------------------
+//  The snapshot logic is the part most likely to quietly lose data, so it is
+//  written against a tiny four-method store interface rather than against
+//  IndexedDB directly. The browser build injects the IndexedDB adapter; the
+//  test harness injects a Map. The code under test is byte-identical in both.
+// ============================================================================
+
+// ---- the store interface ----------------------------------------------------
+// put(id, snapshot) · get(id) · ids() · del(id)
+const MemSnapStore = {
+  _m:new Map(),
+  async put(id, s){ this._m.set(id, s); return s; },
+  async get(id){ return this._m.get(id) || null; },
+  async ids(){ return [...this._m.keys()]; },
+  async del(id){ this._m.delete(id); },
+};
+
+const IdbSnapStore = {
+  DB:"cyrus_snapshots_v1", _db:null,
+  open(){
+    if(this._db) return Promise.resolve(this._db);
+    return new Promise((res, rej)=>{
+      if(typeof indexedDB === "undefined"){ rej(new Error("IndexedDB unavailable")); return; }
+      const req = indexedDB.open(this.DB, 1);
+      req.onupgradeneeded = ()=>{
+        const db = req.result;
+        if(!db.objectStoreNames.contains("snaps")) db.createObjectStore("snaps", {keyPath:"id"});
+      };
+      req.onsuccess = ()=>{ this._db = req.result; res(this._db); };
+      req.onerror = ()=>rej(req.error || new Error("could not open the snapshot database"));
+    });
+  },
+  async _tx(mode, fn){
+    const db = await this.open();
+    return new Promise((res, rej)=>{
+      const tx = db.transaction("snaps", mode);
+      const store = tx.objectStore("snaps");
+      const out = fn(store);
+      tx.oncomplete = ()=>res(out && out.result !== undefined ? out.result : out);
+      tx.onerror = ()=>rej(tx.error);
+      tx.onabort = ()=>rej(tx.error || new Error("snapshot transaction aborted"));
+    });
+  },
+  async put(id, s){ return this._tx("readwrite", st=>{ st.put(s); return s; }); },
+  async get(id){ return this._tx("readonly", st=>st.get(id)).then(r=>r||null); },
+  async ids(){
+    const keys = await this._tx("readonly", st=>st.getAllKeys());
+    return (keys && keys.result) || keys || [];
+  },
+  async del(id){ return this._tx("readwrite", st=>{ st.delete(id); return true; }); },
+};
+
+// ============================================================================
+const Snapshots = {
+  store: (typeof indexedDB !== "undefined") ? IdbSnapStore : MemSnapStore,
+  RETAIN: 10,
+  available(){ return !!this.store; },
+
+  // A stable, cheap content hash. Not a security primitive — it exists so two
+  // snapshots of an unchanged file store one copy, not two.
+  hash(s){
+    s = String(s == null ? "" : s);
+    let h1 = 0x811c9dc5, h2 = 0x01000193;
+    for(let i=0;i<s.length;i++){
+      const c = s.charCodeAt(i);
+      h1 = ((h1 ^ c) >>> 0) * 16777619 >>> 0;
+      h2 = ((h2 + c) >>> 0) ^ (h1 >>> 13) >>> 0;
+    }
+    return (h1.toString(16).padStart(8,"0") + h2.toString(16).padStart(8,"0"));
+  },
+
+  // Capture the current virtual filesystem. Only files — the audit log and
+  // settings are append-only and small, and a restore should not roll back the
+  // record of why the restore happened.
+  capture(label, reason){
+    const entries = [];
+    VFS.walk("/", (path, node) => {
+      if(node.type !== "file") return;
+      entries.push({
+        path,
+        content: node.content == null ? "" : node.content,
+        mtime: node.mtime || 0,
+        h: this.hash(node.content),
+      });
+    });
+    return { label: label || ("Snapshot " + new Date().toLocaleString()), reason: reason || "manual", entries };
+  },
+
+  // `keep` is an explicit third argument, not something inferred from the label.
+  // Inferring it looked tidy and was a bug: every automatic restore point is
+  // named "before rm ...", so all of them counted as deliberate and retention
+  // pruned nothing. Protection is now something a person does on purpose.
+  // Date.now() has millisecond resolution and snapshots are created in bursts, so
+  // two snapshots often share a ts. With equal ts, "newest" is undefined and
+  // retention can prune the newer of the pair. Ticks are therefore forced
+  // strictly increasing against whatever is already stored.
+  async _nextTs(){
+    const now = Date.now();
+    let max = 0;
+    let ids = [];
+    try{ ids = await this.store.ids(); }catch(e){ return now; }
+    for(const id of ids){
+      const s = await this.store.get(id);
+      if(s && s.ts > max) max = s.ts;
+    }
+    return Math.max(now, max + 1);
+  },
+
+  async take(label, reason, keep){
+    if(!this.available()) return null;
+    const snap = this.capture(label, reason);
+    snap.id = "s" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,7);
+    snap.ts = await this._nextTs();
+    snap.count = snap.entries.length;
+    snap.bytes = snap.entries.reduce((a,e)=>a+e.content.length, 0);
+    snap.keep = !!keep;
+    try{
+      await this.store.put(snap.id, snap);
+    }catch(e){
+      // Out of quota must not take the OS down with it, and must not be silent.
+      console.error("[snapshots] write failed", e);
+      Cyrus.audit("snapshot", "snapshot_disk", {label}, "low", false, false,
+                  "Snapshot failed: " + (e.message||e));
+      return null;
+    }
+    Cyrus.audit("snapshot", "snapshot_disk", {label:snap.label, files:snap.count}, "low", true, true,
+                "Snapshot “" + snap.label + "” — " + snap.count + " files, " + snap.bytes + " bytes");
+    await this.prune();
+    return snap;
+  },
+
+  // Keep the newest RETAIN unpinned snapshots. A pinned snapshot is never deleted
+  // here — deleting one is always a deliberate act in the UI.
+  async prune(){
+    if(!this.available()) return 0;
+    let ids;
+    try{ ids = await this.store.ids(); }catch(e){ return 0; }
+    const all = [];
+    for(const id of ids){
+      const s = await this.store.get(id);
+      if(s) all.push(s);
+    }
+    all.sort((a,b)=>a.ts - b.ts);
+    const automatic = all.filter(s => !s.keep);
+    if(automatic.length <= this.RETAIN) return 0;
+    const surplus = automatic.slice(0, automatic.length - this.RETAIN);
+    for(const s of surplus){
+      try{ await this.store.del(s.id); }catch(e){ console.error("[snapshots] prune", e); }
+    }
+    return surplus.length;
+  },
+
+  async list(){
+    if(!this.available()) return [];
+    let ids = [];
+    try{ ids = await this.store.ids(); }catch(e){ return []; }
+    const all = [];
+    for(const id of ids){
+      const s = await this.store.get(id);
+      if(s) all.push(s);
+    }
+    return all.sort((a,b)=>b.ts - a.ts);
+  },
+
+  // Whole-filesystem restore. Snapshots first — restoring must not be the one
+  // irreversible action in this file.
+  async restore(id, confirmFn){
+    const snap = await this.store.get(id);
+    if(!snap) return {ok:false, message:"That snapshot no longer exists."};
+
+    const existing = this.capture("pre-restore","auto");
+    const diff = this.diff(snap.entries, existing.entries);
+    if(!diff.length) return {ok:true, message:"The filesystem already matches that snapshot — nothing to restore."};
+    if(!diff.every(d => d.kind === "missing")){
+      const ok = confirmFn ? await confirmFn(diff) : true;
+      if(!ok) return {ok:false, message:"Restore cancelled."};
+    }
+    existing.id = "s" + Date.now().toString(36) + "-prerestore";
+    existing.ts = await this._nextTs();
+    existing.keep = false;
+    existing.count = existing.entries.length;
+    try{ await this.store.put(existing.id, existing); }catch(e){ console.error("[snapshots] pre-restore", e); }
+
+    VFS.remove("/home");
+    VFS.mkdirp("/home");
+    let n = 0;
+    for(const e of snap.entries){
+      VFS.mkdirp(VFS.parent(e.path));
+      if(VFS.writeFile(e.path, e.content)) n++;
+    }
+    Store.save(); Bus.emit("vfs");
+    Cyrus.audit("restore snapshot", "restore_disk", {id:snap.id, files:n}, "high", true, true,
+                "Restored " + n + " files from “" + snap.label + "”");
+    return {ok:true, message:"Restored " + n + " files from “" + snap.label + "”. A snapshot of the previous state was kept as “" + existing.label + "”."};
+  },
+
+  // One file back out of a snapshot, without touching anything else.
+  async restoreFile(id, path, confirmFn){
+    const snap = await this.store.get(id);
+    if(!snap) return {ok:false, message:"That snapshot no longer exists."};
+    const e = snap.entries.find(x => x.path === path);
+    if(!e) return {ok:false, message:"That file is not in this snapshot."};
+    const cur = VFS.node(path);
+    if(cur && cur.content === e.content) return {ok:true, message:"“" + path + "” already matches that snapshot."};
+    if(cur && confirmFn){ if(!await confirmFn(path)) return {ok:false, message:"Cancelled."}; }
+    if(cur) await this.take("pre-restore of " + VFS.base(path), "auto");
+    VFS.mkdirp(VFS.parent(path));
+    VFS.writeFile(path, e.content);
+    Store.save(); Bus.emit("vfs");
+    Cyrus.audit("restore file", "restore_disk", {id:snap.id, path}, "medium", true, true,
+                "Restored " + path + " from “" + snap.label + "”");
+    return {ok:true, message:"Restored " + path + " from “" + snap.label + "”."};
+  },
+
+  // What actually changes if this snapshot were restored.
+  diff(snapEntries, curEntries){
+    const cur = new Map(curEntries.map(e => [e.path, e]));
+    const want = new Map(snapEntries.map(e => [e.path, e]));
+    const out = [];
+    for(const [p, e] of want){
+      const c = cur.get(p);
+      if(!c) out.push({path:p, kind:"missing"});
+      else if(c.h !== e.h) out.push({path:p, kind:"changed"});
+    }
+    for(const [p] of cur) if(!want.has(p)) out.push({path:p, kind:"extra"});
+    return out;
+  },
+
+  // ---- Export / import ----------------------------------------------------
+  exportBundle(){
+    return JSON.stringify({
+      format:"cyrus-snapshot-bundle", version:1,
+      exported:new Date().toISOString(),
+      snapshots: this._pending || [],
+    });
+  },
+  async exportAll(){
+    this._pending = await this.list();
+    const json = this.exportBundle();
+    this._pending = null;
+    return json;
+  },
+  parseBundle(text){
+    let b;
+    try{ b = JSON.parse(text); }catch(e){ return {ok:false, message:"That file is not a CYRUS snapshot bundle."}; }
+    if(!b || b.format !== "cyrus-snapshot-bundle" || !Array.isArray(b.snapshots))
+      return {ok:false, message:"That file is not a CYRUS snapshot bundle."};
+    return {ok:true, snapshots:b.snapshots};
+  },
+  async importBundle(text){
+    const p = this.parseBundle(text);
+    if(!p.ok) return p;
+    let n = 0;
+    for(const s of p.snapshots){
+      if(!s || !Array.isArray(s.entries)) continue;
+      const id = s.id || ("s" + Date.now().toString(36) + "-imp" + n);
+      await this.store.put(id, {...s, id});
+      n++;
+    }
+    await this.prune();
+    return {ok:true, message:"Imported " + n + " snapshot(s)."};
+  },
+};
+
+// ============================================================================
+//  Automatic restore points
+// ============================================================================
+//  Hooked in two places: the terminal's own destructive commands, and StFS's
+//  guard (Studio's explorer). Both fire *after* the policy gate approved the op
+//  and *before* it runs.
+function snapshotBefore(label, reason){
+  if(!Snapshots.available()) return Promise.resolve(null);
+  // keep defaults to false: automatic restore points are the churny ones and
+  // retention is exactly what stops them filling the disk.
+  return Snapshots.take(label, reason, false).catch(e=>{ console.error("[snapshots:auto]", e); return null; });
+}
+
+// `rm` and `rm -r` in cyrus-sh. Rewriting the command objects rather than
+// wrapping the terminal means the help text, `man` and the risk table all keep
+// describing what actually runs.
+["rm","rmdir"].forEach(name=>{
+  const orig = CMDS[name];
+  if(!orig || orig.__snapWrapped) return;
+  const wrapped = {
+    man: orig.man,
+    async run(a, s, pr){
+      await snapshotBefore("before `" + name + " " + a.join(" ") + "`", "auto");
+      return orig.run(a, s, pr);
+    },
+  };
+  wrapped.__snapWrapped = true;
+  CMDS[name] = wrapped;
+});
+
+// Studio's explorer. StFS exists before this splice point, so the guard can be
+// wrapped directly.
+if(typeof StFS !== "undefined" && StFS.guard && !StFS.guard.__snapWrapped){
+  const origGuard = StFS.guard.bind(StFS);
+  const wrappedGuard = async function(op, targets, describe){
+    const many = Array.isArray(targets) ? targets.length > 1 : false;
+    const risk = StFS.risk(op, targets, many);
+    // Only the ops that can lose data, and only once the gate has said yes.
+    if(risk === "medium" || risk === "high"){
+      const before = await snapshotBefore("before " + op + " (" + describe + ")", "auto");
+      window.__cyrusLastRestorePoint = before;
+    }
+    return origGuard(op, targets, describe);
+  };
+  wrappedGuard.__snapWrapped = true;
+  StFS.guard = wrappedGuard;
+}
+
+// ============================================================================
+//  UI
+// ============================================================================
+Apps.register("snapshots", {
+  title:"Snapshots", icon:"🕘",
+  launch(){
+    WM.open({
+      id:"cyrus-snapshots", title:"Snapshots", icon:"🕘", w:640, h:520,
+      async build(win){
+        const body = Cyrus.el("div","cyr-snap");
+        win.body.appendChild(body);
+        const paint = async ()=>{
+          const snaps = await Snapshots.list();
+          body.innerHTML = `<div class="cyr-snap-bar">
+              <button class="btn primary" id="cs-now">Snapshot now</button>
+              <button class="btn ghost" id="cs-exp">Export…</button>
+              <button class="btn ghost" id="cs-imp">Import…</button>
+              <span class="cyr-snap-n">${snaps.length} kept · newest ${Snapshots.RETAIN} kept, pinned ones kept until you delete them</span>
+            </div>
+            <div class="cyr-snap-list">${snaps.length ? snaps.map(s=>`
+              <div class="cyr-snap-r${s.keep ? " pinned" : ""}" data-id="${esc(s.id)}">
+                <div class="l">${esc(s.label)}${s.keep ? " 📌" : ""}</div>
+                <div class="m">${new Date(s.ts).toLocaleString()} · ${s.count||0} files · ${s.reason||""}</div>
+                <div class="a"><button class="btn ghost" data-a="view">Inspect</button>
+                    <button class="btn ghost" data-a="restore">Restore all</button>
+                    <button class="btn ghost" data-a="file">Restore a file…</button>
+                    <button class="btn ghost" data-a="pin">${s.keep ? "Unpin" : "Pin"}</button>
+                    <button class="btn danger" data-a="del">Delete</button></div>
+              </div>`).join("") : `<div class="cyr-snap-empty">No snapshots yet. One is taken automatically before any approved delete or move.</div>`}</div>`;
+
+          body.querySelector("#cs-now").addEventListener("click", async ()=>{
+            const s = await Snapshots.take("Snapshot " + new Date().toLocaleString(), "manual", false);
+            Toast.show("Snapshots", s ? ("Kept “" + s.label + "” — " + s.count + " files") : "Could not write a snapshot (see console)", null, s?"ok":"err");
+            paint();
+          });
+          body.querySelector("#cs-exp").addEventListener("click", async ()=>{
+            const json = await Snapshots.exportAll();
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(new Blob([json], {type:"application/json"}));
+            a.download = "cyrus-snapshots-" + new Date().toISOString().slice(0,10) + ".json";
+            a.click();
+            setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+          });
+          body.querySelector("#cs-imp").addEventListener("click", ()=>{
+            const inp = document.createElement("input");
+            inp.type = "file"; inp.accept = ".json,application/json";
+            inp.addEventListener("change", async ()=>{
+              if(!inp.files || !inp.files[0]) return;
+              const res = await Snapshots.importBundle(await inp.files[0].text());
+              Toast.show("Snapshots", res.message, null, res.ok?"ok":"err");
+              paint();
+            });
+            inp.click();
+          });
+          body.querySelectorAll(".cyr-snap-r").forEach(row=>{
+            const id = row.dataset.id;
+            row.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click", async ()=>{
+              const a = b.dataset.a;
+              if(a === "del"){
+                if(!await Modal.confirm({title:"Delete snapshot?", body:"This cannot be undone.", confirmText:"Delete", danger:true})) return;
+                await Snapshots.store.del(id); paint(); return;
+              }
+              if(a === "pin"){
+                const s = await Snapshots.store.get(id);
+                s.keep = !s.keep;
+                await Snapshots.store.put(id, s);
+                Cyrus.audit("pin snapshot", "snapshot_disk", {id}, "low", true, true,
+                            (s.keep ? "Pinned " : "Unpinned ") + s.label);
+                paint(); return;
+              }
+              if(a === "view"){
+                const s = await Snapshots.store.get(id);
+                Modal.info("Snapshot", s.entries.slice(0,400).map(e=>e.path).join("\n") +
+                           (s.entries.length>400 ? "\n… and " + (s.entries.length-400) + " more" : ""));
+                return;
+              }
+              if(a === "file"){
+                const s = await Snapshots.store.get(id);
+                const pick = prompt("Restore which file?\n\n" + s.entries.slice(0,25).map(e=>e.path).join("\n") +
+                                    (s.entries.length>25 ? "\n…" : ""), "");
+                if(!pick) return;
+                const res = await Snapshots.restoreFile(id, VFS.norm("/home/rithvik", pick.trim()),
+                  p => Modal.confirm({title:"Overwrite " + VFS.base(p) + "?", body:"The current version is snapshotted first.", confirmText:"Restore"}));
+                Toast.show("Snapshots", res.message, null, res.ok?"ok":"err");
+                paint(); return;
+              }
+              if(a === "restore"){
+                const s = await Snapshots.store.get(id);
+                const cur = Snapshots.capture("preview","diff");
+                const d = Snapshots.diff(s.entries, cur.entries);
+                if(!d.length){ Toast.show("Snapshots","Nothing would change.",null,"warn"); return; }
+                const ok = await Modal.confirm({
+                  title:"Restore “" + s.label + "”?",
+                  body: d.length + " change(s):\n" +
+                        d.slice(0,20).map(x=>"· " + x.kind + " " + x.path).join("\n") +
+                        (d.length>20 ? "\n… and " + (d.length-20) + " more" : "") +
+                        "\n\nA snapshot of the current state is kept first, so this is reversible.",
+                  confirmText:"Restore", danger:true });
+                if(!ok) return;
+                const res = await Snapshots.restore(id);
+                Toast.show("Snapshots", res.message, null, res.ok?"ok":"err");
+                paint();
+              }
+            }));
+          });
+        };
+        paint();
+      },
+    });
+  }
+});
+// ============================================================================
+//  OS PHASE 13 — DEVICE PROFILES
+//  Named local profiles with separate encrypted vaults.
+// ============================================================================
+//
+//  WHAT THIS IS NOT
+//  ----------------
+//  This is not multi-user, and nothing in the UI is allowed to imply that it is.
+//
+//  A real OS account means: an identity the machine trusts, permissions enforced
+//  by a kernel, a login service, group policy, an audit trail keyed to a person.
+//  A web page cannot supply any of that, and pretending otherwise would repeat
+//  exactly the mistake this whole file exists to fix.
+//
+//  So the honest version: several *device-local profiles*, each with its own
+//  vault, settings and audit log, unlocked by a passphrase held only by this
+//  browser profile. The word "account" does not appear in the UI. The word
+//  "user" does not appear either. SysProbe's "System users / permissions" row
+//  stays permanently `unavailable`, because it is.
+// ============================================================================
+
+const Vaults = {
+  // PBKDF2-SHA256, 210k iterations. `iterations` is stored with the payload so
+  // a future bump stays readable instead of silently invalidating old vaults.
+  ITER: 210000,
+  SALT_BYTES: 16,
+
+  async deriveKey(passphrase, salt, iterations){
+    const enc = new TextEncoder();
+    const base = await crypto.subtle.importKey("raw", enc.encode(passphrase), "PBKDF2", false, ["deriveKey"]);
+    return await crypto.subtle.deriveKey(
+      {name:"PBKDF2", salt, iterations, hash:"SHA-256"},
+      base,
+      {name:"AES-GCM", length:256},
+      false,
+      ["encrypt","decrypt"]
+    );
+  },
+  toB64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); },
+  fromB64(s){ return Uint8Array.from(atob(s), c => c.charCodeAt(0)); },
+
+  available(){ return typeof crypto !== "undefined" && !!(crypto.subtle && crypto.getRandomValues); },
+
+  async encrypt(plaintext, passphrase){
+    if(!this.available()) throw new Error("WebCrypto is not available in this browser");
+    const salt = crypto.getRandomValues(new Uint8Array(this.SALT_BYTES));
+    const iv   = crypto.getRandomValues(new Uint8Array(12));
+    const key  = await this.deriveKey(passphrase, salt, this.ITER);
+    const data = new TextEncoder().encode(plaintext);
+    const ct   = await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, data);
+    return JSON.stringify({ v:1, alg:"AES-GCM", kdf:"PBKDF2-SHA256", iterations:this.ITER,
+                            salt:this.toB64(salt), iv:this.toB64(iv), data:this.toB64(ct) });
+  },
+
+  async decrypt(blob, passphrase){
+    if(!this.available()) throw new Error("WebCrypto is not available in this browser");
+    const b = JSON.parse(blob);
+    if(!b || b.alg !== "AES-GCM") throw new Error("this vault was written by a different scheme");
+    const key = await this.deriveKey(passphrase, this.fromB64(b.salt), b.iterations || this.ITER);
+    let plain;
+    try{
+      plain = await crypto.subtle.decrypt({name:"AES-GCM", iv:this.fromB64(b.iv)}, key, this.fromB64(b.data));
+    }catch(e){
+      // AES-GCM authentication failed. Almost always a wrong passphrase, and
+      // saying so is more useful than "operation failed".
+      throw new Error("wrong passphrase, or this vault was damaged");
+    }
+    return new TextDecoder().decode(plain);
+  },
+};
+
+// ============================================================================
+const Profiles = {
+  META:"cyrus_profiles_v1",
+  active:null,
+  _list:[],
+
+  available(){ try{ return !!localStorage; }catch(e){ return false; } },
+
+  list(){
+    try{
+      const raw = localStorage.getItem(this.META);
+      const parsed = raw ? JSON.parse(raw) : null;
+      this._list = (parsed && Array.isArray(parsed.profiles)) ? parsed.profiles : [];
+    }catch(e){ this._list = []; }
+    return this._list;
+  },
+  _save(){ try{ localStorage.setItem(this.META, JSON.stringify({profiles:this._list, active:this.active})); }catch(e){} },
+  get(name){ return this.list().find(p => p.name === name) || null; },
+
+  async create(name, passphrase){
+    name = String(name||"").trim();
+    if(!name) throw new Error("a profile needs a name");
+    if(this.get(name)) throw new Error("a profile called “" + name + "” already exists");
+    if(passphrase && !Vaults.available()) throw new Error("this browser has no WebCrypto, so a passphrase cannot be used");
+    const p = { name, created:Date.now(), encrypted:!!passphrase, saltHint:null };
+    if(passphrase){
+      const enc = await Vaults.encrypt(this._emptyVault(), passphrase);
+      localStorage.setItem(this._vaultKey(name), enc);
+    }else{
+      // Stored in plain sight, and the UI says so rather than implying safety.
+      localStorage.setItem(this._vaultKey(name), this._emptyVault());
+    }
+    this.list().push(p);
+    this._save();
+    return p;
+  },
+
+  _emptyVault(){ return JSON.stringify({ vfs:VFS.node("/") || mkDirNode("/",{}), log:[], settings:Store.data.settings || defaultSettings(), notes:{} }); },
+  _vaultKey(name){ return "cyrus_vault_" + encodeURIComponent(name); },
+
+  // Unlock writes the vault into the live Store and returns whether it worked.
+  async unlock(name, passphrase){
+    const p = this.get(name);
+    if(!p) return {ok:false, message:"No such profile."};
+    const raw = localStorage.getItem(this._vaultKey(name));
+    if(raw == null) return {ok:false, message:"That profile has no vault — it may have been removed from this browser."};
+    let text = raw;
+    if(p.encrypted){
+      if(!passphrase) return {ok:false, message:"This profile is encrypted. Enter its passphrase."};
+      try{ text = await Vaults.decrypt(raw, passphrase); }
+      catch(e){ return {ok:false, message: e.message || "could not unlock that vault"}; }
+    }
+    let v;
+    try{ v = JSON.parse(text); }catch(e){ return {ok:false, message:"That vault is corrupt."}; }
+    Store.data.vfs = v.vfs || (VFS.node("/"));
+    Store.data.log = Array.isArray(v.log) ? v.log : [];
+    Store.data.settings = Object.assign(defaultSettings(), v.settings || {});
+    Store.data.notes = v.notes || {};
+    // VFS.root must point at the loaded tree or every later read sees the old one.
+    VFS.root = Store.data.vfs;
+    Store.save();
+    this.active = name; this._save();
+    return {ok:true, message:"Unlocked “" + name + "”."};
+  },
+
+  async saveActive(passphrase){
+    const name = this.active;
+    if(!name) return {ok:false, message:"no profile is active"};
+    const p = this.get(name);
+    const plain = JSON.stringify({vfs:VFS.root, log:Store.data.log, settings:Store.data.settings, notes:Store.data.notes});
+    try{
+      localStorage.setItem(this._vaultKey(name), p.encrypted ? await Vaults.encrypt(plain, passphrase) : plain);
+      return {ok:true, message:"Saved."};
+    }catch(e){ return {ok:false, message:e.message||String(e)}; }
+  },
+
+  remove(name){
+    if(!this.get(name)) return false;
+    localStorage.removeItem(this._vaultKey(name));
+    this._list = this.list().filter(p => p.name !== name);
+    if(this.active === name) this.active = null;
+    this._save();
+    return true;
+  },
+
+  // The sentence that keeps this feature honest, shown wherever profiles appear.
+  blurb(){
+    return "Device profiles. Each has its own files, settings and history, unlocked on this " +
+           "browser only. There is no account, no identity and no permission system — CYRUS " +
+           "cannot tell who you are, and a profile protects data at rest, not from you.";
+  },
+};
+
+// ============================================================================
+//  UI
+// ============================================================================
+Apps.register("profiles", {
+  title:"Profiles", icon:"👥",
+  launch(){
+    WM.open({
+      id:"cyrus-profiles", title:"Profiles", icon:"👥", w:560, h:520,
+      build(win){
+        const paint = ()=>{
+          const list = Profiles.list();
+          win.body.innerHTML = `<div class="cyr-prof">
+            <p class="cyr-prof-blurb">${esc(Profiles.blurb())}</p>
+            <div class="cyr-prof-list">${list.length ? list.map(p=>`
+              <div class="cyr-prof-r">
+                <div><b>${esc(p.name)}</b> <span>${p.encrypted ? "🔒 encrypted" : "⚠️ stored in plain text"}</span>
+                  <em>created ${new Date(p.created).toLocaleDateString()}${Profiles.active===p.name ? " · active" : ""}</em></div>
+                <div class="a"><button class="btn ghost" data-a="switch" data-n="${esc(p.name)}">Switch to</button>
+                  <button class="btn danger" data-a="del" data-n="${esc(p.name)}">Delete</button></div>
+              </div>`).join("") : `<div class="cyr-prof-empty">No profiles yet. The default desktop is not one — it is just this browser's storage.</div>`}</div>
+            <div class="cyr-prof-new">
+              <input id="cp-name" placeholder="Profile name" autocomplete="off">
+              <input id="cp-pass" type="password" placeholder="Passphrase (optional — without one it is stored in plain text)" autocomplete="new-password">
+              <button class="btn primary" id="cp-go">Create</button>
+            </div>
+            <div class="cyr-prof-note">Lock the screen (Ctrl+Shift+L) to pick a profile.</div>
+          </div>`;
+
+          win.body.querySelector("#cp-go").addEventListener("click", async ()=>{
+            const n = win.body.querySelector("#cp-name").value.trim();
+            const pw = win.body.querySelector("#cp-pass").value;
+            try{
+              await Profiles.create(n, pw);
+              Toast.show("Profiles", "Created “" + n + "”. Switch to it to start using it.", null, "ok");
+              paint();
+            }catch(e){ Toast.show("Profiles", e.message || String(e), null, "err"); }
+          });
+          win.body.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click", async ()=>{
+            const n = b.dataset.n;
+            if(b.dataset.a === "del"){
+              if(!await Modal.confirm({title:"Delete “" + n + "”?", body:"The profile and its vault are removed from this browser. Export a snapshot bundle first if you want a copy.", confirmText:"Delete", danger:true})) return;
+              Profiles.remove(n); paint(); return;
+            }
+            await Profiles.saveActive();
+            const r = await Profiles.unlock(n, "");
+            if(!r.ok){
+              const pw = prompt("“" + n + "” is encrypted.\n\nPassphrase:");
+              if(pw == null) return;
+              const r2 = await Profiles.unlock(n, pw);
+              if(!r2.ok){ Toast.show("Profiles", r2.message, null, "err"); return; }
+            }
+            Toast.show("Profiles", "Switched to “" + n + "”.", null, "ok");
+            WM.close("cyrus-profiles");
+            Bus.emit("vfs"); Bus.emit("wm"); Bus.emit("log");
+          }));
+        };
+        paint();
+      }
+    });
+  }
+});
+
+// ============================================================================
+//  Lock screen → profile picker
+// ============================================================================
+//  The lock screen is plain markup built at boot, so it can be re-skinned once
+//  profiles exist. With no profiles it behaves exactly as before: one name, one
+//  button, Enter to log in.
+Cyrus.onReady(()=>{
+  const list = Profiles.list();
+  const card = document.querySelector("#lock-card");
+  if(!card) return;
+
+  if(list.length > 1){
+    const hint = document.querySelector("#lock-hint");
+    if(hint) hint.textContent = "Pick a profile to continue";
+    const strip = Cyrus.el("div","cyr-lock-profiles");
+    strip.innerHTML = list.map(p=>
+      `<button class="cyr-lock-p" data-n="${esc(p.name)}">${esc(p.name)}${p.encrypted? " 🔒":""}</button>`).join("");
+    card.insertBefore(strip, document.querySelector("#lock-btn"));
+    strip.addEventListener("click", async ev=>{
+      const b = ev.target.closest("[data-n]");
+      if(!b) return;
+      const p = Profiles.get(b.dataset.n);
+      let pw = "";
+      if(p && p.encrypted){
+        pw = prompt("Passphrase for “" + p.name + "”:") || "";
+        if(!pw) return;
+      }
+      const r = await Profiles.unlock(b.dataset.n, pw);
+      if(!r.ok){ Toast.show("Profiles", r.message, null, "err"); return; }
+      const btn = document.querySelector("#lock-btn");
+      if(btn) btn.click();
+    });
+  }
+
+  // Persist before the tab closes, so an encrypted profile is never left
+  // holding the previous vault's contents.
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState === "hidden" && Profiles.active) Profiles.saveActive();
+  });
+});
+// ============================================================================
+//  OS PHASE 14 — OFFLINE
+//  A brain that works with the cable pulled, and an honest reason when it can't.
+// ============================================================================
+//
+//  THE CONSTRAINT THAT DECIDES THIS FILE
+//  -------------------------------------
+//  Service workers do not register on `file://`. Neither does the install
+//  prompt, and OPFS is unreliable there. CYRUS is a single HTML file that most
+//  people open by double-clicking, so "add a service worker" is not a feature —
+//  it is a decision about which origins get it.
+//
+//  It gets them where it can work. `node .freebuff/serve.js 8791` serves the
+//  same file over http://localhost, which is a secure context, and everything
+//  below switches on there. On `file://` nothing is registered, nothing breaks,
+//  and the Offline app explains precisely why.
+//
+//  THE OLLAMA PROBLEM
+//  ------------------
+//  With the page on http://localhost:8791 and Ollama on http://localhost:11434,
+//  the browser treats that as cross-origin. Ollama answers a preflight, refuses
+//  it, and `fetch` rejects with an opaque TypeError that is indistinguishable
+//  from "Ollama is not running".
+//
+//  Both states look identical to JavaScript. The only way to tell them apart is
+//  to probe the endpoint from a context that is *not* subject to CORS, and the
+//  answer is: you cannot, from the page. So this file does the next best thing —
+//  it names both causes, says which fix applies to each, and never claims to
+//  know which one it was.
+// ============================================================================
+
+const Offline = {
+  // Served from the site root by serve.js, because a service worker's default
+  // scope is its own directory and the page that registers it lives at "/".
+  swUrl:"/sw.js",
+  manifestUrl:"/manifest.webmanifest",
+  reg:null,
+  installed:false,
+  reason:"",
+  // Cross-origin needs a server. file:// gets neither of these.
+  canRegister(){
+    return typeof navigator!=="undefined" && "serviceWorker" in navigator &&
+           /^https?:$/.test(location.protocol);
+  },
+
+  async register(){
+    if(!this.canRegister()){
+      this.reason = location.protocol === "file:"
+        ? "This page is open as file://, where browsers do not allow service workers."
+        : "This browser does not support service workers.";
+      return {ok:false, reason:this.reason};
+    }
+    // The manifest is injected from JS rather than sitting in <head>, because
+    // the build restores the HTML from HEAD — a hand-edited <link> would be
+    // erased on the next `node .freebuff/rebuild.js`. On file:// the href is
+    // null so no pointless request is made.
+    if(!document.querySelector('link[rel="manifest"]')){
+      const link = document.createElement("link");
+      link.rel = "manifest";
+      link.href = this.canRegister() ? this.manifestUrl : "";
+      if(link.href) document.head.appendChild(link);
+    }
+    try{
+      this.reg = await navigator.serviceWorker.register(this.swUrl, {scope:"./"});
+
+      // On a FIRST visit there is nothing active yet: the worker is still
+      // installing and reg.active is null. Reading the state only once left
+      // the panel saying "Registering…" forever even though the worker came
+      // active a moment later, so activation is tracked as it happens.
+      this.installed = !!this.reg.active;
+      this._watch(this.reg.active);
+      this._watch(this.reg.installing);
+      this._watch(this.reg.waiting);
+
+      // A stale worker from an earlier visit serves an older CYRUS. Say so
+      // rather than letting the user debug phantom behaviour.
+      this.reg.addEventListener("updatefound", ()=>{
+        const w = this.reg.installing;
+        if(!w) return;
+        w.addEventListener("statechange", ()=>{
+          if(w.state === "installed" && navigator.serviceWorker.controller){
+            Toast.show("Offline","A new version of CYRUS is ready. Close every CYRUS tab to switch over.",null,"warn");
+          }
+        });
+      });
+
+      return {ok:true, state:this.reg.active ? "active" : (this.reg.installing ? "installing" : "waiting")};
+    }catch(e){
+      this.reason = e.message || String(e);
+      return {ok:false, reason:this.reason};
+    }
+  },
+
+  // Follow a worker's lifecycle and reflect it in the panel. A worker that
+  // reaches "activated" means offline really is available from now on.
+  _watch(worker){
+    if(!worker || worker.__cyrusWatched) return;
+    worker.__cyrusWatched = true;
+    worker.addEventListener("statechange", ()=>{
+      if(worker.state === "activated"){
+        this.installed = true;
+        this.reason = "";
+      }else if(worker.state === "redundant"){
+        this.installed = false;
+      }
+      Bus.emit("cyrus:offline");   // the Offline window repaints on this
+    });
+  },
+
+  // What "offline" actually means here, stated by what is cached and what is not.
+  coverage(){
+    return [
+      { what:"The CYRUS shell (this HTML file)", when:"cached after the first load", ok:this.installed },
+      { what:"Your files, settings and audit log", when:"always local — never needs a network", ok:true },
+      { what:"Local model (Ollama)", when:"works offline, if the endpoint allows this origin", ok:null },
+      { what:"Puter, Groq, Gemini, OpenRouter, Pollinations", when:"cloud — these need a network and will say so", ok:false },
+      { what:"Web search", when:"needs a network", ok:false },
+    ];
+  },
+};
+
+// ============================================================================
+//  Ollama CORS diagnosis
+// ============================================================================
+//  Replaces the old probe's single red "no answer from that endpoint".
+const OllamaDiag = {
+  // Ollama has to opt in to a browser origin with OLLAMA_ORIGINS. Without it
+  // the reply is a preflight failure that fetch() reports as a bare TypeError.
+  corsHint(){
+    const origin = location.origin === "null" ? "(file:// — no origin, always refused)" : location.origin;
+    return origin;
+  },
+  fix(){
+    return process_free_text(
+      "Ollama is on port 11434 and your page is on " + this.corsHint() +
+      ". These are different origins, so the browser sends a preflight and Ollama" +
+      " refuses it unless you name the page explicitly.\n\n" +
+      "  # in the shell Ollama is running in, before starting it:\n" +
+      "  export OLLAMA_ORIGINS='" + this.corsHint() + "'\n" +
+      "  ollama serve\n\n" +
+      "On Windows PowerShell:\n" +
+      "  $env:OLLAMA_ORIGINS='" + this.corsHint() + "'; ollama serve\n\n" +
+      "Or set it to '*' if this machine is yours alone — that lets any page" +
+      " reach your model, which is a real trade-off and not a recommendation."
+    );
+  },
+
+  // A single request cannot separate "not running" from "refused". So try the
+  // endpoint three ways and report what is actually distinguishable.
+  async diagnose(endpoint){
+    const url = String(endpoint||"").replace(/\/v1\/chat\/completions\/?$/,"");
+    if(!url) return {state:"no-endpoint", text:"No endpoint set. Settings → CYRUS Brain → Ollama."};
+
+    // 1. A plain no-cors probe: opaque either way, but a *network-level*
+    //    failure (nothing listening) rejects, while a server that answers with
+    //    a CORS error resolves opaquely. That difference is real and usable.
+    let reachable = null;
+    try{ await fetch(url + "/api/tags", {mode:"no-cors", cache:"no-store"}); reachable = true; }
+    catch(e){ reachable = false; }
+
+    if(!reachable){
+      return {
+        state:"unreachable",
+        text:"Nothing answered at " + url + ".\n\n" +
+             "  · Is Ollama running?  `ollama serve`, then `ollama pull qwen2.5:3b`\n" +
+             "  · Is it on another port? Check with `ollama list` or the terminal's `netstat`\n" +
+             "  · Did you mean your cloud providers? The AI Router tries those first anyway."
+      };
+    }
+
+    // 2. Something is listening. Now the only likely cause left is the origin.
+    let cors = false, body = null;
+    try{
+      const r = await fetch(url + "/api/tags", {cache:"no-store"});
+      cors = true;
+      try{ body = await r.json(); }catch(e){}
+    }catch(e){ cors = false; }
+
+    if(cors) return {state:"ok", text:"Connected — " + ((body && body.models && body.models.length) ? body.models.length + " model(s) installed" : "reachable, but no models pulled yet (`ollama pull qwen2.5:3b`)"), models:(body&&body.models||[]).map(m=>m.name)};
+
+    return {
+      state:"cors",
+      text:"Ollama is running and CYRUS reached it, but the browser blocked the reply.\n\n" +
+           "Your page is a different origin from Ollama, and Ollama has not been told to allow it.\n\n" + this.fix(),
+      hint:this.fix()
+    };
+  },
+};
+function process_free_text(s){ return s; } // kept as a seam for future locale work
+
+// ============================================================================
+//  UI
+// ============================================================================
+Apps.register("offline", {
+  title:"Offline", icon:"📴",
+  launch(){
+    WM.open({
+      id:"cyrus-offline", title:"Offline", icon:"📴", w:580, h:500,
+      build(win){
+        const paint = async ()=>{
+          const rows = Offline.coverage();
+          const ep = (typeof Router!=="undefined" && Router.endpoints) ? (Router.endpoints().ollama||"") : "";
+          win.body.innerHTML = `<div class="cyr-off">
+            <div class="cyr-off-h ${Offline.canRegister()? (Offline.installed?"ok":"warn") : "warn"}">
+              ${Offline.canRegister()
+                ? (Offline.installed ? "✓ Offline shell is active" : "◷ Registering the offline shell…")
+                : "✗ Offline is unavailable on this origin"}
+            </div>
+            <p class="cyr-off-why">${esc(Offline.reason || (Offline.canRegister()
+              ? "CYRUS is served over http, so it can install a service worker and run with no network."
+              : "Open CYRUS over http to enable offline: `node .freebuff/serve.js 8791` then visit http://localhost:"+ (location.port||"8791") +". A file:// tab cannot register a service worker — that is a browser rule, not a CYRUS setting."))}</p>
+            <div class="cyr-off-list">${rows.map(r=>`
+              <div class="cyr-off-r ${r.ok===true?"ok":r.ok===false?"no":"maybe"}">
+                <div class="w">${esc(r.what)}</div>
+                <div class="v">${r.ok===true?"✓ works offline":r.ok===false?"✕ needs a network":"~ depends on setup"}</div>
+                <div class="n">${esc(r.when)}</div></div>`).join("")}</div>
+            <div class="cyr-off-sec">
+              <h4>Local model check</h4>
+              <div class="cyr-off-end">${esc(ep || "no endpoint set")}</div>
+              <button class="btn ghost" id="co-check">Check</button>
+              <pre class="cyr-off-out" id="co-out">—</pre>
+            </div>
+          </div>`;
+          win.body.querySelector("#co-check").addEventListener("click", async ()=>{
+            const out = win.body.querySelector("#co-out");
+            out.textContent = "asking " + (ep||"nothing") + " …";
+            const d = await OllamaDiag.diagnose(ep);
+            out.textContent = "[" + d.state + "]\n\n" + d.text;
+          });
+        };
+        paint();
+      },
+    });
+  }
+});
+
+Cyrus.onReady(()=>{ Offline.register(); });
 /*STUDIO_INSERT*/
+
+// --- CYRUS Studio (VS Code + Cursor style IDE: explorer, tabs, runner, AI copilot)
+// ============================================================================
+
 
 // --- CYRUS Studio (VS Code + Cursor style IDE: explorer, tabs, runner, AI copilot)
 // ============================================================================

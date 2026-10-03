@@ -70,7 +70,12 @@ const chunks = [
   ".freebuff/_p0.js", ".freebuff/_p1.js", ".freebuff/_p234.js", ".freebuff/_p5.js",
   ".freebuff/_p67.js", ".freebuff/studio_p8a.js", ".freebuff/studio_p8b.js",
   ".freebuff/studio_p8c.js", ".freebuff/studio_p8d.js", ".freebuff/studio_p8e.js",
-  ".freebuff/studio_p8f.js", ".freebuff/studio_p9.js"
+  ".freebuff/studio_p8f.js", ".freebuff/studio_p9.js",
+  // OS phases. Order matters: p10 defines the shared `Cyrus` namespace and the
+  // `Mnt`/`Bridge`/`DiskUsage` objects the later phases extend, so it must stay
+  // first. Each is self-contained otherwise.
+  ".freebuff/os_p10_disk.js", ".freebuff/os_p11_system.js", ".freebuff/os_p12_snapshots.js",
+  ".freebuff/os_p13_profiles.js", ".freebuff/os_p14_offline.js"
 ];
 for (const c of chunks) {
   const body = fs.readFileSync(c, "utf8").replace(/\r\n/g, "\n");

@@ -1,0 +1,15 @@
+{
+  "name": "CYRUS OS",
+  "short_name": "CYRUS",
+  "description": "An AI-native operating environment. Say what you want; CYRUS plans it, checks permission, does it, proves it.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#140d21",
+  "theme_color": "#140d21",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "/assets/banner.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

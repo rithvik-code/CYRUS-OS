@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/build-zero-00B894?style=for-the-badge" alt="Zero build">
   <img src="https://img.shields.io/badge/AI-local--first%20%7C%20keyless-6C5CE7?style=for-the-badge" alt="Local-first, keyless AI">
   <img src="https://img.shields.io/badge/actions-policy--gated%20%7C%20audited-E17055?style=for-the-badge" alt="Policy-gated and audited">
-  <img src="https://img.shields.io/badge/tests-7%20safety%20tests-0984E3?style=for-the-badge" alt="7 safety tests">
+  <img src="https://img.shields.io/badge/tests-30%20safety%20tests-0984E3?style=for-the-badge" alt="30 safety tests">
 </p>
 
 <p>
@@ -267,20 +267,27 @@ CYRUS OS/
 │   ├── validate_regex.js        ← compiles all 85 symbol regexes; a bad one fails the build, not the page
 │   ├── test_fixes.js            ← 90 assertions over the Quick Fix fixers, diagnostics and symbol families
 │   ├── test_conn.js             ← 53 assertions over provider authority: capture, verify, forget, audit secrecy
+│   ├── test_disk.js             ← 51 assertions over the /mnt router: mounts route, everything else does not
+│   ├── test_system.js           ← 91 assertions that no measurement is ever invented
+│   ├── test_snapshots.js        ← 63 assertions that a delete is genuinely recoverable
+│   ├── test_profiles.js         ← 49 assertions over vault encryption and the Ollama diagnosis
+│   ├── os_p1*.js                ← OS phases 10–14 (real disk, system, snapshots, profiles, offline)
 │   ├── studio_p*.js             ← Studio source chunks, one per phase
+│   ├── sw.js / manifest.webmanifest ← offline shell; needs a served origin
 │   └── cyrus-architecture.html  ← visual map of the layers
 ├── cyrus/                       ← the native Python command layer
 │   ├── cyrus/
 │   │   ├── main.py              ← hotkey → palette → intent → permissions → dispatch → log
 │   │   ├── intent.py            ← LLM → validated JSON (local first, cloud opt-in)
 │   │   ├── actions.py           ← the whitelist = the security boundary
+│   │   ├── bridge.py            ← optional loopback daemon: 9 verbs, no shell, confined to indexed_paths
 │   │   ├── permissions.py       ← static risk table (read it in 30 seconds)
 │   │   ├── indexer.py           ← sentence-transformers + SQLite semantic index
 │   │   ├── memory.py            ← append-only audit log
 │   │   └── palette_ui.py        ← Tkinter palette (ships with Python)
 │   ├── config.yaml              ← everything the AI may touch, declared
 │   ├── scripts/                 ← install.sh + the registered, pre-approved scripts
-│   └── tests/                   ← 7 tests aimed only at the safety-critical files
+│   └── tests/                   ← 30 tests aimed only at the safety-critical files
 ├── assets/                      ← screenshots + banner
 ├── cyrus.zip / files.zip        ← release snapshots
 └── README.md                    ← you are here
@@ -295,19 +302,56 @@ Adding a sixth action takes four edits, and each one is a place a reviewer can s
 3. Write the handler and wire it into `dispatch()` — no generic shell calls.
 4. Add a test in `cyrus/tests/` that proves the unregistered path is still rejected.
 
+## Reaching the real machine
+
+The browser half of CYRUS used to have exactly one filesystem — an in-memory tree in
+`localStorage`. Everything below closes a specific gap, and every claim here is asserted by a
+test rather than asserted in prose.
+
+| | What it is | How |
+|---|---|---|
+| **💾 Locations** | `/mnt/<name>/…` is a real folder. `ls`, `cat`, `rm`, the Files app and the Studio explorer all read it. | `mount --pick` (File System Access), OPFS, or the bridge. A picked folder is root-scoped by the browser, so CYRUS physically cannot see outside it. |
+| **🖥️ System** | Real measurements, each labelled with where it came from. | `hardwareConcurrency`, `performance.memory`, `storage.estimate()`, WebGPU, Battery, Network Information, WebUSB/Serial/HID. |
+| **🕘 Snapshots** | A delete is now recoverable. Content-hashed, pinned snapshots, automatic restore points, export/import. | IndexedDB. Taken before any approved delete, and before every restore. |
+| **👥 Profiles** | Named local profiles with encrypted vaults. | WebCrypto AES-GCM + PBKDF2. |
+| **📴 Offline** | The shell runs with the cable pulled. | Service worker + manifest, on a served origin. |
+| **🌉 Bridge** | An optional loopback daemon so the browser half can reach your disk and sensors. | `python -m cyrus.bridge` — 9 verbs, bound to `127.0.0.1`, confined to `indexed_paths`, **no exec surface at all**. |
+
+```bash
+# everything above, served — offline and the service worker need an origin
+node .freebuff/serve.js 8791          # then open http://localhost:8791
+
+# optional: let the browser half reach the real disk
+cd cyrus && python -m cyrus.bridge    # then Locations → CYRUS bridge
+
+# running the tests
+node .freebuff/test_disk.js && node .freebuff/test_system.js \
+  && node .freebuff/test_snapshots.js && node .freebuff/test_profiles.js
+cd cyrus && python -m pytest tests/   # 30 safety tests
+```
+
 ## Honest limits right now
 
-- **Not a kernel.** The browser OS runs on a virtual filesystem in `localStorage`; the native layer
-  acts on your real disk, but only inside `indexed_paths`.
-- **Studio has no language servers.** Real type checking and compiler-driven refactors need
-  tsserver, pyright and rust-analyzer as separate processes. A single page cannot host them, so
-  Studio does structural analysis and says so.
-- **Search is over filenames and paths**, not full file contents — content indexing has real cost
-  and staleness implications, so it is a deliberate v2 decision, not a missing checkbox.
-- **Keyless AI lanes are community services.** They rate-limit and they go down; paste your own key
-  in Settings or run Ollama for a fully offline brain.
-- **The risk table is static.** Correct for v1: a table you can read beats a black box with
-  filesystem access.
+These are not gaps waiting to be filled. They are the edges of what a browser page can be, and
+the System app lists them as permanently `not reachable from a browser` rather than hiding them.
+
+- **Not a kernel, and not becoming one.** Kernel modules, driver installation, BIOS/UEFI and
+  filesystem repair need a privileged process on the host. A page cannot have one. CYRUS says so.
+- **Multi-user is not on the table.** Profiles are device-local, hold no identity, and carry no
+  permissions. They are not accounts and CYRUS never calls them accounts.
+- **Offline needs an origin.** Service workers do not run on `file://`. Open CYRUS over `http`
+  (`node .freebuff/serve.js 8791`) and offline works; the double-clicked file stays a file.
+- **Ollama needs to be told about the browser.** `localhost:8791` and `localhost:11434` are
+  different origins, so Ollama must be started with `OLLAMA_ORIGINS`. The Offline app detects this
+  and prints the exact command — but it genuinely cannot tell "not running" from "refused by
+  CORS" from inside a page, so it will not pretend to.
+- **The mirror can lose a write.** VFS is synchronous and real filesystems are not, so a mount
+  keeps an in-memory mirror and pushes writes on flush. A crash between a write and its flush can
+  lose that write; each mount shows its own last-sync time.
+- **Studio has no language servers.** Real type checking needs tsserver, pyright and rust-analyzer
+  as separate processes, so Studio does structural analysis and says so.
+- **Search is over filenames and paths**, not full file contents.
+- **The risk table is static.** A table you can read beats a black box with filesystem access.
 
 ---
 
