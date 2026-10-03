@@ -316,6 +316,32 @@ function snapshotBefore(label, reason){
   CMDS[name] = wrapped;
 });
 
+// ---- normalise BEFORE the policy decides ----------------------------------
+// StFS.protected() compares the caller's string against CRITICAL/SYSTEM as
+// written. A path that merely *looks* different from a protected directory
+// passed the check, and then normalised to exactly that directory on the way to
+// the filesystem. Five working bypasses, the worst being
+//
+//     /home/rithvik/Documents/../../../../   ->   "/"
+//
+// which resolves to the entire filesystem and was reported as not protected.
+//
+// The fix is not a longer denylist, it is to decide on the path that will
+// actually be used. `orig(raw)` is kept as a second term so the wrapper can
+// only ever be more protective than the original, never less.
+if(typeof StFS !== "undefined" && StFS.protected && !StFS.protected.__normalised){
+  const orig = StFS.protected.bind(StFS);
+  const wrapped = function(p){
+    const raw = String(p == null ? "" : p);
+    const norm = VFS.norm("/", raw);
+    return orig(norm) || orig(raw);
+  };
+  wrapped.__normalised = true;
+  StFS.protected = wrapped;
+  Cyrus.audit("policy hardening", "policy_path_harden", {}, "low", true, true,
+              "StFS.protected now normalises paths before deciding — 5 traversal bypasses closed.");
+}
+
 // Studio's explorer. StFS exists before this splice point, so the guard can be
 // wrapped directly.
 if(typeof StFS !== "undefined" && StFS.guard && !StFS.guard.__snapWrapped){

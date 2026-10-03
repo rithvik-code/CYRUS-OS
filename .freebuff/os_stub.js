@@ -203,10 +203,17 @@ function makeCtx(opts) {
       },
     },
     MAN: { rm: "rm <path>", rmdir: "rmdir <dir>" },
+    // The REAL CRITICAL/SYSTEM lists and the REAL protected() implementation,
+    // copied verbatim from cyrus-os.html. An empty list here made every
+    // path-safety assertion vacuously true — the stub was agreeing with
+    // whatever the code did, which is the opposite of a test.
     StFS: {
       risk(op) { return op === "delete" ? "medium" : "low"; },
-      CRITICAL: [], SYSTEM: [],
-      protected() { return false; },
+      CRITICAL: ["/", "/home", "/home/rithvik", "/home/rithvik/Documents", "/home/rithvik/Projects"],
+      SYSTEM: ["/etc","/bin","/sbin","/lib","/usr","/var","/boot","/dev","/proc","/sys","/opt"],
+      protected(p) {
+        return this.CRITICAL.includes(p) || this.SYSTEM.some(s => p === s || p.startsWith(s + "/"));
+      },
       guard: async function (op, targets, describe) { ctx.__guards.push({ op, targets, describe }); return true; },
     },
     Router: { endpoints: () => ({}), probe: async () => false },
