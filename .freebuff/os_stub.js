@@ -33,7 +33,7 @@ const NL = String.fromCharCode(10);
 // reason phase 16 exists is that persistence can fail quietly, and a fake that
 // always succeeds would hide the exact bug it was written to find.
 function makeIDB() {
-  // name -> Map(storeName -> Map(key -> value))
+  // name -> { version, stores:Map(storeName -> Map(key -> value)) }
   const dbs = new Map();
   const api = {
     failWrites: false,
@@ -43,42 +43,59 @@ function makeIDB() {
   };
   const tick = fn => Promise.resolve().then(fn);
 
-  api.open = function (name, _version) {
+  api.open = function (name, version) {
     const req = { onsuccess: null, onerror: null, onupgradeneeded: null, onblocked: null, result: null, error: null };
     tick(() => {
-      let stores = dbs.get(name);
-      if (!stores) { stores = new Map(); dbs.set(name, stores); }
+      let rec = dbs.get(name);
+      let upgraded = false;
+      if (!rec) { rec = { version: 0, stores: new Map() }; dbs.set(name, rec); upgraded = true; }
+      // The real database only runs an upgrade when the version actually goes
+      // up. Firing onupgradeneeded on every open would silently destroy the
+      // stored data each time — a fake that is more destructive than reality
+      // hides the very bug it exists to find.
+      else if (version && version > rec.version) upgraded = true;
+      if (upgraded) rec.version = version || 1;
+
       const db = {
-        objectStoreNames: { contains: s => stores.has(s) },
-        createObjectStore(s) { stores.set(s, new Map()); return api._handle(s, stores); },
-        transaction(names, mode) {
+        objectStoreNames: { contains: s => rec.stores.has(s) },
+        createObjectStore(s) { rec.stores.set(s, new Map()); return api._handle(s, rec, null); },
+        transaction(names) {
           const list = Array.isArray(names) ? names : [names];
-          const tx = { oncomplete: null, onerror: null, onabort: null, error: null };
-          tx.objectStore = n => api._handle(n, stores);
-          // The commit callback is always last, exactly as in the real thing.
-          tick(() => { if (tx.oncomplete) tx.oncomplete(); });
+          const tx = { oncomplete: null, onerror: null, onabort: null, error: null, _failed: false };
+          tx.objectStore = n => api._handle(n, rec, tx);
+          // A failing request aborts its transaction, so the commit callback
+          // must NOT report success. Callers that trust oncomplete to mean
+          // "durable" would otherwise believe a lost write was saved.
+          tick(() => {
+            if (tx._failed) { if (tx.onerror) tx.onerror(); else if (tx.onabort) tx.onabort(); }
+            else if (tx.oncomplete) tx.oncomplete();
+          });
           return tx;
         },
         close() {},
       };
       req.result = db;
-      if (req.onupgradeneeded) req.onupgradeneeded();
+      if (upgraded && req.onupgradeneeded) req.onupgradeneeded();
       if (req.onsuccess) req.onsuccess();
     });
     return req;
   };
 
-  api._handle = function (storeName, stores) {
-    const data = stores.get(storeName) || new Map();
+  api._handle = function (storeName, rec, tx) {
+    const data = rec.stores.get(storeName) || new Map();
     const settle = (req, value, err) => tick(() => {
       if (err) { req.error = err; if (req.onerror) req.onerror(); }
       else { req.result = value; if (req.onsuccess) req.onsuccess(); }
     });
+    // A failing request aborts its transaction. The flag is set *synchronously*
+    // at call time, not inside the async callback: the transaction's commit
+    // check was queued first, so a late flag would be read as success.
+    const fail = (req, msg) => { if (tx) tx._failed = true; settle(req, undefined, new Error(msg)); return req; };
     return {
       // keyPath is "k" throughout this OS.
       put(v) {
         const req = {};
-        if (api.failWrites) { settle(req, undefined, new Error("write failed")); return req; }
+        if (api.failWrites) return fail(req, "write failed");
         data.set(v.k, JSON.parse(JSON.stringify(v)));   // structured clone
         settle(req, v.k);
         return req;
@@ -90,7 +107,7 @@ function makeIDB() {
       },
       delete(k) {
         const req = {};
-        if (api.failWrites) { settle(req, undefined, new Error("delete failed")); return req; }
+        if (api.failWrites) return fail(req, "delete failed");
         data.delete(k);
         settle(req, undefined);
         return req;
@@ -230,7 +247,19 @@ function makeCtx(opts) {
     data: { vfs: VFS.root, log: [], settings: { accent: "#d4a53f" }, notes: {} },
     saves: 0,
     save() { Store.saves++; },
-    reset() {},
+    // Faithful to the real load(): the state comes from localStorage, and a
+    // missing or unparseable payload seeds a fresh one. Without this a test
+    // could not simulate a reload at all — a new context would just start from
+    // the default state and hydration would have nothing to restore.
+    load() {
+      try { Store.data = JSON.parse(ctx.localStorage.getItem(Store.KEY)); } catch (e) { Store.data = null; }
+      if (!Store.data || !Store.data.vfs) {
+        Store.data = { vfs: VFS.root, log: [], settings: { accent: "#d4a53f" }, notes: {} };
+      }
+      if (!Store.data.settings) Store.data.settings = { accent: "#d4a53f" };
+      if (!Store.data.notes) Store.data.notes = {};
+    },
+    reset() { ctx.location.reload(); },
   };
   const store = {};
   // `opts.local` lets a test hand the *same* backing map to a second context,
@@ -378,6 +407,10 @@ function makeCtx(opts) {
     crypto: opts.crypto,
     URL, Blob: class {}, fetch: opts.fetch || (async () => { throw new Error("no network in tests"); }),
     __log: [], __apps: {}, __guards: [], __timers: timers,
+    // The raw backing map behind localStorage/sessionStorage, so a test can
+    // assert what was actually persisted. `localStorage.foo` is undefined by
+    // design — it is a real Storage-like object, not a bag of properties.
+    __local: local,
     __fireTimers() { const t = timers.splice(0, timers.length); t.forEach(f => { try { f(); } catch (e) { ctx.__timerErr = e; } }); },
   };
   VFS.host = ctx;            // so mutations emit on the real bus

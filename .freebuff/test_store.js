@@ -33,17 +33,31 @@ async function main() {
     // --- reload: a brand-new context over the same durable storage ---------
     const b = makeCtx({ idb, local });
     loadOS(b);
-    b.Store.data.notes = {};
-    b.Store.data.settings.accent = "#d4a53f";
+    b.Store.load();                       // init() does this on DOMContentLoaded
     b.Cyrus.fireReady();
     await tick(); await tick(); await tick();
 
-    eq(b.Persist.hydrated, true, "the reload adopts the IndexedDB copy");
+    eq(b.Persist.hydrated, false, "an ordinary reload has nothing to adopt — the mirror was already current");
     eq(b.Store.data.notes.remembered, "the user prefers metric units",
        "the user's notes survived the reload");
     eq(b.Store.data.settings.accent, "#00ff00", "settings survived too");
     ok(b.VFS.node("/home/rithvik"), "VFS is still a real tree after hydration");
-    eq(b.VFS.root, b.Store.data.vfs, "VFS.root is rebound to the hydrated tree — otherwise the OS shows a stale filesystem");
+
+    // A reload with the mirror *gone* but the database intact — the case the
+    // localStorage-only design could not survive. The database is the only
+    // remaining copy, so it must be adopted and VFS must be rebound to it,
+    // otherwise the OS renders a stale filesystem over good data.
+    const c = makeCtx({ idb, local: {} });          // fresh, empty mirror
+    loadOS(c);
+    c.Store.load();
+    c.Cyrus.fireReady();
+    await tick(); await tick(); await tick();
+    eq(c.Persist.hydrated, true, "with the mirror gone, the database is adopted");
+    eq(c.Store.data.notes.remembered, "the user prefers metric units",
+       "and it really is the state that was saved");
+    ok(c.VFS.node("/home/rithvik"), "VFS is a real tree after adoption");
+    eq(c.VFS.root, c.Store.data.vfs,
+       "VFS.root is rebound to the adopted tree — otherwise the OS shows a stale filesystem");
   }
 
   // ---- hydration must never clobber newer in-memory work ------------------
@@ -62,6 +76,7 @@ async function main() {
     // Second session: the mirror says v2, but IndexedDB still holds v1.
     const b = makeCtx({ idb, local });
     loadOS(b);
+    b.Store.load();                       // boot reads the mirror, as init() does
     eq(b.Store.data.notes.k, "v1", "the mirror carried the latest state into boot");
     b.Store.data.notes.k = "v2-edited-this-session";
     b.Store.save();
@@ -84,6 +99,8 @@ async function main() {
     eq(a.Persist.lsHealthy, false, "a failed mirror write is detected, not assumed");
     ok(/Quota/.test(a.Persist.lastError), "and the reason is recorded", a.Persist.lastError);
     eq(local.cyrus_os_v2, undefined, "nothing landed in localStorage");
+    eq(local.cyrus_os_mirror_rev, undefined,
+       "the revision marker does not advance either — otherwise the next boot would believe it has data it lost");
 
     a.Persist.dirty = true;
     await a.Persist.flush();
@@ -112,6 +129,7 @@ async function main() {
 
     const b = makeCtx({ idb, local });
     loadOS(b);
+    b.Store.load();
     b.Cyrus.fireReady();
     await tick(); await tick(); await tick();
     eq(b.Persist.hydrated, false, "equal revisions are left alone: no pointless re-render");
@@ -140,6 +158,7 @@ async function main() {
 
     const b = makeCtx({ idb, local });
     loadOS(b);
+    b.Store.load();
     b.Cyrus.fireReady();
     await tick(); await tick(); await tick();
     eq(b.Persist.hydrated, false, "after a reset there is nothing left to hydrate");
@@ -155,8 +174,8 @@ async function main() {
     ctx.Store.data.notes.plain = "still saved";
     ctx.Store.save();
     eq(ctx.Persist.lsHealthy, true, "without IndexedDB the mirror is used directly");
-    ok(ctx.localStorage.cyrus_os_v2, "and it is still written");
-    eq(ctx.localStorage.cyrus_os_rev, "1", "with the revision recorded");
+    ok(ctx.__local.cyrus_os_v2, "and it is still written");
+    eq(ctx.__local.cyrus_os_mirror_rev, "1", "with the revision recorded");
     ctx.Cyrus.fireReady();
     await tick(); await tick();
     eq(ctx.Persist.hydrated, false, "hydration declines cleanly when there is no database");
@@ -175,7 +194,7 @@ async function main() {
     const wrote = await ctx.Persist.flush();
     eq(wrote, false, "a failed write reports failure instead of pretending");
     eq(ctx.Persist.dirty, true, "and stays dirty so it can be retried");
-    ok(ctx.localStorage.cyrus_os_v2, "the mirror is untouched — persistence degrades, saving does not");
+    ok(ctx.__local.cyrus_os_v2, "the mirror is untouched — persistence degrades, saving does not");
   }
 
   // ---- every save bumps exactly one revision ------------------------------

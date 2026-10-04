@@ -37,10 +37,15 @@ const Persist = {
   DB:"cyrus_os_store_v1",
   STORE:"kv",
   KEY:"store",
-  REV_KEY:"cyrus_os_rev",
+  // Records the revision the localStorage mirror *actually* holds — written only
+  // after a mirror write that succeeded. A plain "last saved rev" counter is not
+  // enough: when the mirror is over quota the counter still advances while the
+  // data does not, and the next boot would then believe it had the latest state
+  // when it holds nothing at all. This key only moves when bytes really moved.
+  MIRROR_KEY:"cyrus_os_mirror_rev",
   FLUSH_MS:250,
   _timer:null, _db:null, _dbTried:false,
-  dirty:false, lsHealthy:true, hydrated:false, lastError:null,
+  dirty:false, lsHealthy:true, hydrated:false, lastError:null, mirrorRev:0,
 
   // ---- open (cached; one connection, reused) -------------------------------
   open(){
@@ -68,6 +73,9 @@ const Persist = {
     try{
       localStorage.setItem(Store.KEY, JSON.stringify(Store.data));
       this.lsHealthy = true;
+      // Only now does the mirror genuinely hold this revision.
+      localStorage.setItem(this.MIRROR_KEY, String(Store.rev || 0));
+      this.mirrorRev = Store.rev || 0;
       return true;
     }catch(e){
       this.lsHealthy = false;
@@ -122,17 +130,23 @@ const Persist = {
     const localRev = Store.rev || 0;
     const idbRev = rec.rev || 0;
 
-    // Same revision: both claim to hold it. If the mirror is broken, the
-    // database is the only surviving copy, so it wins. Otherwise there is
-    // nothing to gain by swapping.
-    if(idbRev === localRev && this.lsHealthy) return { adopted:false, reason:"up to date" };
-    if(idbRev < localRev && this.lsHealthy)   return { adopted:false, reason:"database older" };
+    // Adopt only when the database is strictly ahead of what the mirror
+    // demonstrably holds. That single comparison covers every real case:
+    //
+    //   mirror missing / cleared   -> mirrorRev 0, database wins
+    //   mirror over quota          -> MIRROR_KEY never advanced, database wins
+    //   ordinary reload            -> mirrorRev == idbRev, nothing to do
+    //   edits made this session    -> localRev > idbRev, database ignored
+    //
+    // Getting this backwards would undo the user's most recent work on boot,
+    // so equality is deliberately treated as "nothing to gain".
+    if(idbRev <= localRev) return { adopted:false, reason:idbRev < localRev ? "database older" : "up to date" };
 
     Store.data = rec.data;
     Store.rev = idbRev;
     VFS.root = Store.data.vfs;
     this.hydrated = true;
-    try{ localStorage.setItem(this.REV_KEY, String(idbRev)); }catch(e){}
+    this.writeMirror();                     // bring the boot path back in step
     Bus.emit("vfs");
     return { adopted:true, rev:idbRev, reason:this.lsHealthy ? "database newer" : "mirror was broken" };
   },
@@ -143,13 +157,13 @@ const Persist = {
 // behind it. The 40 existing call sites need no change and cannot observe the
 // difference except that their data is now also durable.
 if(typeof Store !== "undefined" && !Store.__persisted){
-  Store.rev = (() => { try{ return parseInt(localStorage.getItem(Persist.REV_KEY), 10) || 0; }catch(e){ return 0; } })();
+  Store.rev = (() => { try{ return parseInt(localStorage.getItem(Persist.MIRROR_KEY), 10) || 0; }catch(e){ return 0; } })();
+  Persist.mirrorRev = Store.rev;
 
   const origSave = Store.save.bind(Store);
   Store.save = function(){
     Store.rev = (Store.rev || 0) + 1;
-    try{ localStorage.setItem(Persist.REV_KEY, String(Store.rev)); }catch(e){}
-    Persist.writeMirror();
+    Persist.writeMirror();                  // advances MIRROR_KEY only on success
     Persist.schedule();
   };
   Store.save.__persisted = true;
@@ -173,7 +187,7 @@ if(typeof Store !== "undefined" && !Store.__persisted){
           });
         }catch(e){}
       }
-      try{ localStorage.removeItem(Persist.REV_KEY); }catch(e){}
+      try{ localStorage.removeItem(Persist.MIRROR_KEY); }catch(e){}
       origReset();
     })();
   };
