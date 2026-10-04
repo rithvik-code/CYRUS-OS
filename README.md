@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/build-zero-00B894?style=for-the-badge" alt="Zero build">
   <img src="https://img.shields.io/badge/AI-local--first%20%7C%20keyless-6C5CE7?style=for-the-badge" alt="Local-first, keyless AI">
   <img src="https://img.shields.io/badge/actions-policy--gated%20%7C%20audited-E17055?style=for-the-badge" alt="Policy-gated and audited">
-  <img src="https://img.shields.io/badge/tests-645%20assertions%20%2B%2034%20python-0984E3?style=for-the-badge" alt="645 assertions plus 34 python tests">
+  <img src="https://img.shields.io/badge/tests-653%20assertions%20%2B%2034%20python-0984E3?style=for-the-badge" alt="653 assertions plus 34 python tests">
 </p>
 
 <p>
