@@ -85,7 +85,7 @@ async function main() {
     // here reproduces that ordering exactly rather than assuming it away.
     vm_actions(ctx);
     loadOS(ctx);
-    ctx.Cyrus.fireReady();
+    await ctx.Cyrus.fireReady();
 
     ok(typeof ctx.Actions === "object" && typeof ctx.Actions.system_report === "function",
        "Actions.system_report is patched by the phase");

@@ -341,15 +341,32 @@ const ActionResult = {
 // ---- wire in ----------------------------------------------------------------
 if(typeof WM !== "undefined") OSState.trackFocus();
 
-// Actions is declared below the splice point, so the wrapper waits for ready.
+// Installing once at ready is not enough, and the reason is worth recording.
+//
+// Cyrus.fireReady() runs its callbacks without awaiting them. Several phases
+// register an *async* ready callback — phase 15 restores its search index from
+// IndexedDB before it replaces Actions.search_files — so that assignment
+// happens after every synchronous callback has already run. A one-shot install
+// therefore misses exactly the actions that were upgraded to async, and they
+// keep returning whatever shape they always did. Search looked fine and was
+// simply un-enveloped.
+//
+// So the installer settles instead: it runs now, and again across a few
+// macrotasks, stopping as soon as a pass finds nothing new to wrap. Every pass
+// is a dozen property reads, and it is idempotent.
 if(typeof Cyrus !== "undefined" && Cyrus.onReady){
   Cyrus.onReady(()=>{
-    const n = ActionResult.install();
-    // Recorded, not announced: knowing the envelope is installed is a property
-    // of the build, and belongs in the audit trail rather than in a toast.
-    Cyrus.audit("action results", "result_envelope_installed", { actions:n },
-                "low", true, true,
-                n ? ("Actions now return a uniform result envelope (" + n + " actions).")
-                  : "Result envelope already installed.");
+    let total = 0, triesLeft = 12;
+    const settle = () => {
+      const n = ActionResult.install();
+      total += n;
+      if(n > 0 && triesLeft-- > 0 && typeof setTimeout === "function") setTimeout(settle, 0);
+      if(total > 0){
+        Cyrus.audit("action results", "result_envelope_installed", { actions:total },
+                    "low", true, true,
+                    "Actions now return a uniform result envelope (" + total + " actions).");
+      }
+    };
+    settle();
   });
 }

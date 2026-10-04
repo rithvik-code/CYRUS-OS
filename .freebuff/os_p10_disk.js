@@ -51,7 +51,35 @@ const Cyrus = {
   // has run.
   _ready:[], _readyFired:false,
   onReady(fn){ if(this._readyFired){ try{ fn(); }catch(e){ console.error("[cyrus:onReady]",e); } } else this._ready.push(fn); },
-  fireReady(){ if(this._readyFired) return; this._readyFired=true; this._ready.splice(0).forEach(fn=>{ try{ fn(); }catch(e){ console.error("[cyrus:onReady]",e); } }); },
+  // Callbacks run in registration order and each is *awaited* before the next.
+  //
+  // They were fired with forEach and no await, so an async callback returned at
+  // its first await while every later callback carried on immediately. Phase 15
+  // restores its search index from IndexedDB and only then replaces
+  // Actions.search_files — so phase 18's callback ran first, decorated the
+  // other eleven actions, and never saw the twelfth. Nothing threw and nothing
+  // looked wrong; one action was simply silently left in the old shape.
+  //
+  // Each callback is raced against a timeout so a single hung one cannot wedge
+  // every later phase's startup forever.
+  fireReady(){
+    if(this._readyFired) return;
+    this._readyFired = true;
+    const fns = this._ready.splice(0);
+    let chain = Promise.resolve();
+    for(const fn of fns){
+      chain = chain.then(() => {
+        let out;
+        try{ out = fn(); }catch(e){ console.error("[cyrus:onReady]",e); return; }
+        if(!out || typeof out.then !== "function") return;
+        return Promise.race([
+          out.catch(e=>{ console.error("[cyrus:onReady]",e); }),
+          new Promise(r => setTimeout(r, 3000)),
+        ]);
+      });
+    }
+    return chain;
+  },
   el(tag, cls, html){ const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; },
   // `esc`, `fmtSize`, `sleep`, `Log`, `Toast`, `Modal`, `VFS`, `Store`, `Apps`,
   // `WM`, `Bus`, `CMDS`, `MAN` are all declared above the splice point and are
@@ -77,7 +105,10 @@ const Cyrus = {
 // itself idempotent, so extra wake-ups cost nothing.
 const fireReadyNow = Cyrus.fireReady.bind(Cyrus);
 Cyrus.fireReady = function(){
-  if(Store && Store.data){ fireReadyNow(); return; }
+  // The return value matters: fireReady now chains a promise, and a caller that
+  // awaits readiness must actually wait for the callbacks rather than for this
+  // function to return.
+  if(Store && Store.data) return fireReadyNow();
   if(typeof window!=="undefined") setTimeout(()=>Cyrus.fireReady(), 4);
 };
 if(typeof window!=="undefined") setTimeout(()=>Cyrus.fireReady(), 0);

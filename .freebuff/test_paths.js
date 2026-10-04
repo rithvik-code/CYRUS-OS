@@ -97,7 +97,7 @@ async function main() {
   // throw. Assert both halves — installed early, recorded exactly once.
   eq(ctx.__log.filter(l => l[1] === "policy_path_harden").length, 0,
      "nothing is recorded before ready (Store is not usable yet)");
-  ctx.Cyrus.fireReady();
+  await ctx.Cyrus.fireReady();
   const applied = ctx.__log.filter(l => l[1] === "policy_path_harden");
   eq(applied.length, 1, "the hardening records itself exactly once at ready: " + applied.length);
   ok(/traversal bypasses closed/.test(String(applied[0][6])),
@@ -106,7 +106,7 @@ async function main() {
   const ctx2 = makeCtx();
   loadOS(ctx2);
   eq(ctx2.StFS.protected.__normalised, true, "a fresh load applies the hardening");
-  ctx2.Cyrus.fireReady();
+  await ctx2.Cyrus.fireReady();
   eq(ctx2.__log.filter(l => l[1] === "policy_path_harden").length, 1,
      "and again exactly once, not once per load");
   eq(ctx2.StFS.protected("/home/rithvik/Documents/../../../../"), true,
@@ -125,12 +125,15 @@ async function main() {
   c3.Store.data = null;                       // pre-DOMContentLoaded
   let landed = 0;
   c3.Cyrus.onReady(() => { c3.Cyrus.audit("probe", "ready_probe", {}, "low", true, true, "landed"); });
-  c3.Cyrus.fireReady();
+  await c3.Cyrus.fireReady();
   eq(c3.Cyrus._readyFired, false, "fireReady waits while the Store is still null");
   c3.__fireTimers();                           // a wake-up before load: still waits
   eq(c3.Cyrus._readyFired, false, "and keeps waiting across repeated wake-ups");
   c3.Store.data = saved;                       // Store.load() has now run
   c3.__fireTimers();
+  // fireReady chains its callbacks on promises, so firing the timer only starts
+  // them; the records land a microtask later.
+  await new Promise(r => setImmediate(r));
   eq(c3.Cyrus._readyFired, true, "and fires as soon as the Store is available");
   eq(c3.__log.filter(l => l[1] === "policy_path_harden").length, 1,
      "the hardening record survives the pre-init window");

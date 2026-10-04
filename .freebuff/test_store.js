@@ -19,7 +19,7 @@ const tick = () => new Promise(r => setImmediate(r));
 // DOMContentLoaded, Cyrus.fireReady, hydration settles.
 async function boot(ctx) {
   ctx.Store.load();
-  ctx.Cyrus.fireReady();
+  await ctx.Cyrus.fireReady();
   await tick(); await tick(); await tick();
   return ctx;
 }

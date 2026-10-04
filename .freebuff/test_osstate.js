@@ -262,6 +262,27 @@ async function main() {
     ok(/async boom/.test(bad.result.summary), "with the reason preserved", bad.result.summary);
   }
 
+  // An action that is replaced *after* ready must still end up enveloped.
+  // fireReady() now awaits each callback in registration order, so a phase that
+  // restores from IndexedDB and only then swaps in an async implementation has
+  // finished before the next phase's installer runs. This asserts the
+  // reinstall path still works for anything replaced outside that ordering.
+  {
+    const ctx = loadCtx();
+    ctx.Actions = { early(){ return { ok:true, message:"early" }; } };
+    ctx.ActionResult.install();
+    eq(!!(ctx.Actions.early && ctx.Actions.early.__enveloped), true, "the early action is enveloped");
+
+    // Simulate a late async replacement.
+    ctx.Actions.late = async function(){ return { ok:true, message:"late" }; };
+    eq(ctx.Actions.late.__enveloped, undefined, "a newly swapped-in action starts bare");
+    ctx.ActionResult.install();
+    eq(!!ctx.Actions.late.__enveloped, true, "a second pass catches it");
+    const r = await ctx.Actions.late();
+    eq(r.result.action, "late", "and it reports properly");
+    eq(r.result.status, "success", "with the right status");
+  }
+
   // Wrapping twice must not double-wrap.
   {
     const ctx = loadCtx();

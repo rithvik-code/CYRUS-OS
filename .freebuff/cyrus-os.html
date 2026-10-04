@@ -32,6 +32,8 @@
 }
   --st-mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
 }
+  --st-mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
+}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -800,6 +802,8 @@ kbd{background:var(--panel3);border:1px solid var(--border2);border-bottom-width
 .cyr-search-empty b{color:var(--accent)}
 
 /*STUDIO_CSS_END*/
+
+
 
 
 
@@ -8793,7 +8797,35 @@ const Cyrus = {
   // has run.
   _ready:[], _readyFired:false,
   onReady(fn){ if(this._readyFired){ try{ fn(); }catch(e){ console.error("[cyrus:onReady]",e); } } else this._ready.push(fn); },
-  fireReady(){ if(this._readyFired) return; this._readyFired=true; this._ready.splice(0).forEach(fn=>{ try{ fn(); }catch(e){ console.error("[cyrus:onReady]",e); } }); },
+  // Callbacks run in registration order and each is *awaited* before the next.
+  //
+  // They were fired with forEach and no await, so an async callback returned at
+  // its first await while every later callback carried on immediately. Phase 15
+  // restores its search index from IndexedDB and only then replaces
+  // Actions.search_files — so phase 18's callback ran first, decorated the
+  // other eleven actions, and never saw the twelfth. Nothing threw and nothing
+  // looked wrong; one action was simply silently left in the old shape.
+  //
+  // Each callback is raced against a timeout so a single hung one cannot wedge
+  // every later phase's startup forever.
+  fireReady(){
+    if(this._readyFired) return;
+    this._readyFired = true;
+    const fns = this._ready.splice(0);
+    let chain = Promise.resolve();
+    for(const fn of fns){
+      chain = chain.then(() => {
+        let out;
+        try{ out = fn(); }catch(e){ console.error("[cyrus:onReady]",e); return; }
+        if(!out || typeof out.then !== "function") return;
+        return Promise.race([
+          out.catch(e=>{ console.error("[cyrus:onReady]",e); }),
+          new Promise(r => setTimeout(r, 3000)),
+        ]);
+      });
+    }
+    return chain;
+  },
   el(tag, cls, html){ const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; },
   // `esc`, `fmtSize`, `sleep`, `Log`, `Toast`, `Modal`, `VFS`, `Store`, `Apps`,
   // `WM`, `Bus`, `CMDS`, `MAN` are all declared above the splice point and are
@@ -8819,7 +8851,10 @@ const Cyrus = {
 // itself idempotent, so extra wake-ups cost nothing.
 const fireReadyNow = Cyrus.fireReady.bind(Cyrus);
 Cyrus.fireReady = function(){
-  if(Store && Store.data){ fireReadyNow(); return; }
+  // The return value matters: fireReady now chains a promise, and a caller that
+  // awaits readiness must actually wait for the callbacks rather than for this
+  // function to return.
+  if(Store && Store.data) return fireReadyNow();
   if(typeof window!=="undefined") setTimeout(()=>Cyrus.fireReady(), 4);
 };
 if(typeof window!=="undefined") setTimeout(()=>Cyrus.fireReady(), 0);
@@ -12035,19 +12070,40 @@ const ActionResult = {
 // ---- wire in ----------------------------------------------------------------
 if(typeof WM !== "undefined") OSState.trackFocus();
 
-// Actions is declared below the splice point, so the wrapper waits for ready.
+// Installing once at ready is not enough, and the reason is worth recording.
+//
+// Cyrus.fireReady() runs its callbacks without awaiting them. Several phases
+// register an *async* ready callback — phase 15 restores its search index from
+// IndexedDB before it replaces Actions.search_files — so that assignment
+// happens after every synchronous callback has already run. A one-shot install
+// therefore misses exactly the actions that were upgraded to async, and they
+// keep returning whatever shape they always did. Search looked fine and was
+// simply un-enveloped.
+//
+// So the installer settles instead: it runs now, and again across a few
+// macrotasks, stopping as soon as a pass finds nothing new to wrap. Every pass
+// is a dozen property reads, and it is idempotent.
 if(typeof Cyrus !== "undefined" && Cyrus.onReady){
   Cyrus.onReady(()=>{
-    const n = ActionResult.install();
-    // Recorded, not announced: knowing the envelope is installed is a property
-    // of the build, and belongs in the audit trail rather than in a toast.
-    Cyrus.audit("action results", "result_envelope_installed", { actions:n },
-                "low", true, true,
-                n ? ("Actions now return a uniform result envelope (" + n + " actions).")
-                  : "Result envelope already installed.");
+    let total = 0, triesLeft = 12;
+    const settle = () => {
+      const n = ActionResult.install();
+      total += n;
+      if(n > 0 && triesLeft-- > 0 && typeof setTimeout === "function") setTimeout(settle, 0);
+      if(total > 0){
+        Cyrus.audit("action results", "result_envelope_installed", { actions:total },
+                    "low", true, true,
+                    "Actions now return a uniform result envelope (" + total + " actions).");
+      }
+    };
+    settle();
   });
 }
 /*STUDIO_INSERT*/
+
+// --- CYRUS Studio (VS Code + Cursor style IDE: explorer, tabs, runner, AI copilot)
+// ============================================================================
+
 
 // --- CYRUS Studio (VS Code + Cursor style IDE: explorer, tabs, runner, AI copilot)
 // ============================================================================

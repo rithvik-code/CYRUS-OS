@@ -217,7 +217,7 @@ async function main() {
     const ctx = makeCtx();
     ctx.Actions = { search_files: function(){ return {ok:true, message:"legacy filename-only answer"}; } };
     loadOS(ctx);
-    ctx.Cyrus.fireReady();
+    await ctx.Cyrus.fireReady();
     // The onReady callback is async (it awaits the index restore), so the patch
     // lands a microtask or two later. Without this flush the test would call
     // the *old* implementation and report a failure that was really a race.
