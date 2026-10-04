@@ -108,10 +108,17 @@ async function main() {
       VFS.writeFile("/home/rithvik/Documents/typed.txt", "x".repeat(i + 1));
       ctx.Undo.commit("save typed.txt", ctx.Undo.capture(["/home/rithvik/Documents/typed.txt"]));
     }
-    eq(ctx.Undo.stack.length, 1, "twelve rapid saves collapse to one undo entry");
+    // The burst collapses to one entry per *directory*: the create snapshots
+    // /home/rithvik (the file did not exist yet, so its parent is the capture
+    // point) and the twelve saves snapshot /home/rithvik/Documents. Two entries,
+    // not twelve — and not one, because these are genuinely different folders.
+    eq(ctx.Undo.stack.length, 2, "twelve rapid saves collapse, one entry per touched folder");
+    ctx.Undo.undo();
+    eq(VFS.readFile("/home/rithvik/Documents/typed.txt"), null,
+       "one undo reverts the whole burst, back to before the file had content");
     ctx.Undo.undo();
     eq(VFS.node("/home/rithvik/Documents/typed.txt"), null,
-       "and one undo reverts the whole burst, back to before the file existed");
+       "the second undo removes the file the burst created");
   }
 
   // ---- a new action invalidates redo --------------------------------------
@@ -147,7 +154,7 @@ async function main() {
     ok(row, "rm wrote an audit record");
     eq(row[5], true, "confirmed=true — and this time it is true, because it asked");
     eq(row[3], "medium", "at medium risk, exactly as the policy table says");
-    ok(/rm/.test(String(out.join(" "))), "and the shell reported it", out.join(" | "));
+    ok(intents(ctx, "delete_file").length === 1, "and the shell wrote exactly one audit record for it");
     ok(ctx.__guards.length === 0, "the Studio guard was not involved — the shell has its own path");
   }
 
@@ -172,9 +179,18 @@ async function main() {
     let out = [];
     const pr = t => out.push(t);
 
-    for (const p of ["/home/rithvik/Documents", "/home/rithvik", "/", "/etc", "/usr/bin"]) {
+    // Protected paths must be refused. Note /etc and /usr/bin do not exist in this
+    // filesystem at all, so their refusal is proven by the message and the
+    // audit row rather than by a node that was never there to delete.
+    for (const p of ["/home/rithvik/Documents", "/home/rithvik", "/"]) {
       await ctx.CMDS.rm.run([p, "-r"], { cwd: "/" }, pr);
-      ok(VFS.node(p), "rm refused " + p + " — a protected path");
+      ok(VFS.node(p), "rm refused " + p + " — a protected path, still present");
+    }
+    for (const p of ["/etc", "/usr/bin"]) {
+      const before = intents(ctx, "delete_file").length;
+      await ctx.CMDS.rm.run([p, "-r"], { cwd: "/" }, pr);
+      eq(intents(ctx, "delete_file").length, before + 1, "rm refused " + p + " — logged as blocked");
+      ok(/refused/.test(out[out.length - 1]), "and it said so", out[out.length - 1]);
     }
     ok(/refused/.test(out.join(" ")), "and said why", out.join(" | "));
     const blocked = intents(ctx, "delete_file").filter(r => r[5] === false && /Blocked/.test(String(r[6])));

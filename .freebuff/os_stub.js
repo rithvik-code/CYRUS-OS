@@ -432,6 +432,10 @@ function makeCtx(opts) {
         const risk = this.risk(op, targets.length > 1);
         if (risk === "medium" || risk === "high") {
           ctx.__guards.push({ op, targets, describe });
+          // The real guard() performs the deletion here. Recording the dispatch
+          // without doing it made every delete test pass while the file was
+          // still sitting there.
+          targets.forEach(t => ctx.VFS.remove(t));
           ctx.Log.record("studio: " + op, "studio_file_op", { op, targets }, risk, true, true, describe);
         }
         return true;
