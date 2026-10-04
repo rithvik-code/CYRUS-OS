@@ -180,10 +180,25 @@ function makeCtx(opts) {
     // storing it. Keeping them raw here made assertions disagree with the
     // shape the audit log actually has.
     Log: {
+      // Faithful to the real Log.record, which JSON-stringifies `fields`, writes
+      // through Store.data.log, trims to 300, persists and re-emits.
+      //
+      // It also throws when Store.data is null — because the real one does. The
+      // previous stub pushed straight into ctx.__log, which quietly made every
+      // pre-Store callback succeed, hiding the boot race in which Cyrus fires
+      // ready before Store.load() and silently drops audit records. ctx.__log
+      // stays as a chronological mirror for assertions.
       record(user_text, intent, fields, risk, confirmed, ok, message){
-        ctx.__log.push([user_text, intent, JSON.stringify(fields), risk, !!confirmed, !!ok, message]);
+        const row = [user_text, intent, JSON.stringify(fields), risk, !!confirmed, !!ok, message];
+        Store.data.log.unshift(row);              // TypeError if Store.data is null — as in the real OS
+        if (Store.data.log.length > 300) Store.data.log.length = 300;
+        Store.save();
+        ctx.__log.push(row);
+        ctx.Bus.emit("log");
       },
-      recent: () => [], all: () => [], clear() {},
+      recent(n = 100) { return Store.data.log.slice(0, n); },
+      all() { return Store.data.log; },
+      clear() { Store.data.log.length = 0; },
     },
     Toast: { show() {}, error() {} },
     Modal: { confirm: () => Promise.resolve(true), info() {} },
@@ -214,7 +229,27 @@ function makeCtx(opts) {
       protected(p) {
         return this.CRITICAL.includes(p) || this.SYSTEM.some(s => p === s || p.startsWith(s + "/"));
       },
-      guard: async function (op, targets, describe) { ctx.__guards.push({ op, targets, describe }); return true; },
+      // The real guard() enforces the policy: it screens targets with
+      // protected(), logs a refusal, and returns false *without* touching the
+      // filesystem. A permissive stub made every "does the gate hold?" test
+      // vacuous — it answered yes to anything, including "/" .
+      // The sandbox still auto-confirms the medium/high branch and records the
+      // dispatch in __guards so tests can assert the op actually ran.
+      guard: async function (op, targets, describe) {
+        targets = Array.isArray(targets) ? targets : [targets];
+        const critical = targets.filter(t => this.protected(t));
+        if (critical.length) {
+          ctx.Log.record("studio: " + op, "studio_file_op", { op, targets }, "high", false, false,
+                     "Blocked: " + describe + " on a critical path (" + critical.join(", ") + ")");
+          return false;
+        }
+        const risk = this.risk(op, targets.length > 1);
+        if (risk === "medium" || risk === "high") {
+          ctx.__guards.push({ op, targets, describe });
+          ctx.Log.record("studio: " + op, "studio_file_op", { op, targets }, risk, true, true, describe);
+        }
+        return true;
+      },
     },
     Router: { endpoints: () => ({}), probe: async () => false },
     defaultSettings: () => ({ accent: "#d4a53f" }),

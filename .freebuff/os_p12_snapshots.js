@@ -338,8 +338,13 @@ if(typeof StFS !== "undefined" && StFS.protected && !StFS.protected.__normalised
   };
   wrapped.__normalised = true;
   StFS.protected = wrapped;
-  Cyrus.audit("policy hardening", "policy_path_harden", {}, "low", true, true,
-              "StFS.protected now normalises paths before deciding — 5 traversal bypasses closed.");
+  // The wrapper installs eagerly — it has to be in place before any file op can
+  // run. The *record* of it cannot: at splice time `Store` is still null, so an
+  // eager Cyrus.audit() throws inside audit's try/catch and the one write that
+  // would tell the user this policy exists is silently lost. An untraceable
+  // hardening is half a hardening, so the audit waits for readiness.
+  Cyrus.onReady(() => Cyrus.audit("policy hardening", "policy_path_harden", {}, "low", true, true,
+              "StFS.protected now normalises paths before deciding — 5 traversal bypasses closed."));
 }
 
 // Studio's explorer. StFS exists before this splice point, so the guard can be

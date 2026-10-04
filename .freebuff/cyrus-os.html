@@ -22,6 +22,8 @@
 }
   --st-mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
 }
+  --st-mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
+}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -790,6 +792,8 @@ kbd{background:var(--panel3);border:1px solid var(--border2);border-bottom-width
 .cyr-search-empty b{color:var(--accent)}
 
 /*STUDIO_CSS_END*/
+
+
 
 
 
@@ -8775,7 +8779,26 @@ const Cyrus = {
     try{ Log.record(user_text, intent, fields, risk, confirmed, ok, message); }catch(e){ console.error("[cyrus:audit]",e); }
   },
 };
-// One timer after the script finishes is enough, and it costs no polling.
+// One timer after the script finishes is enough, and it costs no polling --
+// but "after the script finishes" is not the same as "after the OS is ready",
+// and the difference was silently costing us every startup audit record.
+//
+// The script ends with `document.addEventListener("DOMContentLoaded", init)`,
+// and Store.load() lives *inside* init(). A 0 ms timer scheduled mid-parse is
+// a macrotask that can beat DOMContentLoaded, so fireReady was firing against
+// a null Store. Every onReady callback that logged then died inside
+// Cyrus.audit's try/catch: the action happened, and the record of it vanished.
+// An OS whose promise is that every action is traceable cannot have its own
+// boot events untraceable.
+//
+// So fireReady is redefined to mean what it says: it waits for the Store. It
+// still polls, but it stops the moment the Store exists, and the original is
+// itself idempotent, so extra wake-ups cost nothing.
+const fireReadyNow = Cyrus.fireReady.bind(Cyrus);
+Cyrus.fireReady = function(){
+  if(Store && Store.data){ fireReadyNow(); return; }
+  if(typeof window!=="undefined") setTimeout(()=>Cyrus.fireReady(), 4);
+};
 if(typeof window!=="undefined") setTimeout(()=>Cyrus.fireReady(), 0);
 
 // A file too big to hold in the mirror is represented by size + mtime only.
@@ -10029,6 +10052,37 @@ function snapshotBefore(label, reason){
   CMDS[name] = wrapped;
 });
 
+// ---- normalise BEFORE the policy decides ----------------------------------
+// StFS.protected() compares the caller's string against CRITICAL/SYSTEM as
+// written. A path that merely *looks* different from a protected directory
+// passed the check, and then normalised to exactly that directory on the way to
+// the filesystem. Five working bypasses, the worst being
+//
+//     /home/rithvik/Documents/../../../../   ->   "/"
+//
+// which resolves to the entire filesystem and was reported as not protected.
+//
+// The fix is not a longer denylist, it is to decide on the path that will
+// actually be used. `orig(raw)` is kept as a second term so the wrapper can
+// only ever be more protective than the original, never less.
+if(typeof StFS !== "undefined" && StFS.protected && !StFS.protected.__normalised){
+  const orig = StFS.protected.bind(StFS);
+  const wrapped = function(p){
+    const raw = String(p == null ? "" : p);
+    const norm = VFS.norm("/", raw);
+    return orig(norm) || orig(raw);
+  };
+  wrapped.__normalised = true;
+  StFS.protected = wrapped;
+  // The wrapper installs eagerly — it has to be in place before any file op can
+  // run. The *record* of it cannot: at splice time `Store` is still null, so an
+  // eager Cyrus.audit() throws inside audit's try/catch and the one write that
+  // would tell the user this policy exists is silently lost. An untraceable
+  // hardening is half a hardening, so the audit waits for readiness.
+  Cyrus.onReady(() => Cyrus.audit("policy hardening", "policy_path_harden", {}, "low", true, true,
+              "StFS.protected now normalises paths before deciding — 5 traversal bypasses closed."));
+}
+
 // Studio's explorer. StFS exists before this splice point, so the guard can be
 // wrapped directly.
 if(typeof StFS !== "undefined" && StFS.guard && !StFS.guard.__snapWrapped){
@@ -11067,6 +11121,10 @@ Cyrus.onReady(async ()=>{
   };
 });
 /*STUDIO_INSERT*/
+
+// --- CYRUS Studio (VS Code + Cursor style IDE: explorer, tabs, runner, AI copilot)
+// ============================================================================
+
 
 // --- CYRUS Studio (VS Code + Cursor style IDE: explorer, tabs, runner, AI copilot)
 // ============================================================================

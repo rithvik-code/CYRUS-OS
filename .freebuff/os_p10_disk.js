@@ -60,7 +60,26 @@ const Cyrus = {
     try{ Log.record(user_text, intent, fields, risk, confirmed, ok, message); }catch(e){ console.error("[cyrus:audit]",e); }
   },
 };
-// One timer after the script finishes is enough, and it costs no polling.
+// One timer after the script finishes is enough, and it costs no polling --
+// but "after the script finishes" is not the same as "after the OS is ready",
+// and the difference was silently costing us every startup audit record.
+//
+// The script ends with `document.addEventListener("DOMContentLoaded", init)`,
+// and Store.load() lives *inside* init(). A 0 ms timer scheduled mid-parse is
+// a macrotask that can beat DOMContentLoaded, so fireReady was firing against
+// a null Store. Every onReady callback that logged then died inside
+// Cyrus.audit's try/catch: the action happened, and the record of it vanished.
+// An OS whose promise is that every action is traceable cannot have its own
+// boot events untraceable.
+//
+// So fireReady is redefined to mean what it says: it waits for the Store. It
+// still polls, but it stops the moment the Store exists, and the original is
+// itself idempotent, so extra wake-ups cost nothing.
+const fireReadyNow = Cyrus.fireReady.bind(Cyrus);
+Cyrus.fireReady = function(){
+  if(Store && Store.data){ fireReadyNow(); return; }
+  if(typeof window!=="undefined") setTimeout(()=>Cyrus.fireReady(), 4);
+};
 if(typeof window!=="undefined") setTimeout(()=>Cyrus.fireReady(), 0);
 
 // A file too big to hold in the mirror is represented by size + mtime only.

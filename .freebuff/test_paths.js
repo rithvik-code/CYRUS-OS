@@ -84,11 +84,59 @@ async function main() {
   ok(StFS.protected("/etc/passwd"), "/etc/passwd is a system path");
   ok(!StFS.protected("/etcetera"), "/etcetera is not /etc");
 
-  // The wrapper is idempotent: loading the chunks twice must not stack.
-  eq(typeof StFS.protected.__normalised, "boolean", "the hardening is marked so it cannot be applied twice");
-  loadOS(ctx);
-  eq(StFS.protected("/home/rithvik/Documents/../../../../"), true,
-     "still blocked after a second load — no double-wrapping regression");
+  // The wrapper is idempotent: a fresh load must apply it exactly once, never
+  // twice. (It cannot be checked by loading twice into the same vm context —
+  // top-level `const` bindings live in the global lexical scope there, so a
+  // second load is a redeclaration SyntaxError. A fresh context is the
+  // faithful equivalent, and it also lets us count the applications.)
+  eq(ctx.StFS.protected.__normalised, true,
+     "the hardening is marked, so it cannot be applied a second time");
+
+  // The wrapper installs at splice time; its audit record waits for ready,
+  // because Store is still null before then and audit() would swallow the
+  // throw. Assert both halves — installed early, recorded exactly once.
+  eq(ctx.__log.filter(l => l[1] === "policy_path_harden").length, 0,
+     "nothing is recorded before ready (Store is not usable yet)");
+  ctx.Cyrus.fireReady();
+  const applied = ctx.__log.filter(l => l[1] === "policy_path_harden");
+  eq(applied.length, 1, "the hardening records itself exactly once at ready: " + applied.length);
+  ok(/traversal bypasses closed/.test(String(applied[0][6])),
+     "and the record says what actually changed", applied.length ? applied[0][6] : "none");
+
+  const ctx2 = makeCtx();
+  loadOS(ctx2);
+  eq(ctx2.StFS.protected.__normalised, true, "a fresh load applies the hardening");
+  ctx2.Cyrus.fireReady();
+  eq(ctx2.__log.filter(l => l[1] === "policy_path_harden").length, 1,
+     "and again exactly once, not once per load");
+  eq(ctx2.StFS.protected("/home/rithvik/Documents/../../../../"), true,
+     "still blocked in the fresh context — no double-wrapping regression");
+  eq(ctx2.StFS.protected("/home/rithvik/Downloads"), false,
+     "and still permissive in the fresh context — double-wrapping would not break this, but a corrupted wrapper would");
+
+  // ---- ready must not fire before the Store exists ------------------------
+  // The boot timer is a 0 ms macrotask; Store.load() runs on DOMContentLoaded.
+  // When the timer won the race, every onReady callback that logged died inside
+  // Cyrus.audit's try/catch and its record was lost. The harness normally
+  // models the post-init state, so the pre-init window has to be set up by hand.
+  const c3 = makeCtx();
+  loadOS(c3);
+  const saved = c3.Store.data;
+  c3.Store.data = null;                       // pre-DOMContentLoaded
+  let landed = 0;
+  c3.Cyrus.onReady(() => { c3.Cyrus.audit("probe", "ready_probe", {}, "low", true, true, "landed"); });
+  c3.Cyrus.fireReady();
+  eq(c3.Cyrus._readyFired, false, "fireReady waits while the Store is still null");
+  c3.__fireTimers();                           // a wake-up before load: still waits
+  eq(c3.Cyrus._readyFired, false, "and keeps waiting across repeated wake-ups");
+  c3.Store.data = saved;                       // Store.load() has now run
+  c3.__fireTimers();
+  eq(c3.Cyrus._readyFired, true, "and fires as soon as the Store is available");
+  eq(c3.__log.filter(l => l[1] === "policy_path_harden").length, 1,
+     "the hardening record survives the pre-init window");
+  landed = c3.__log.filter(l => l[1] === "ready_probe").length;
+  eq(landed, 1, "and every other ready callback keeps its record too: " + landed);
+  eq(c3.__timerErr, undefined, "no ready callback threw while the Store was null");
 
   // ---- the guard refuses a traversal without touching the filesystem ------
   const allowed = await StFS.guard("delete", "/home/rithvik/Documents/../../../../", "delete everything");
