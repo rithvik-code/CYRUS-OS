@@ -259,7 +259,10 @@ function makeCtx(opts) {
       if (!Store.data.settings) Store.data.settings = { accent: "#d4a53f" };
       if (!Store.data.notes) Store.data.notes = {};
     },
-    reset() { ctx.location.reload(); },
+    // Faithful: the real reset() removes the persisted key before reloading. A stub
+    // that only reloaded left the old state in storage, so a "wiped" OS came
+    // back with everything intact — a reset test that passed for the wrong reason.
+    reset() { delete local[Store.KEY]; ctx.location.reload(); },
   };
   const store = {};
   // `opts.local` lets a test hand the *same* backing map to a second context,

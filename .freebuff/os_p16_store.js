@@ -46,6 +46,8 @@ const Persist = {
   FLUSH_MS:250,
   _timer:null, _db:null, _dbTried:false,
   dirty:false, lsHealthy:true, hydrated:false, lastError:null, mirrorRev:0,
+  // Mirroring is held back until hydration has finished — see writeMirror().
+  bootDone:false, _mirrorPending:false,
 
   // ---- open (cached; one connection, reused) -------------------------------
   open(){
@@ -70,6 +72,15 @@ const Persist = {
   // it with the same write plus an honest result. localStorage stays the boot
   // path; IndexedDB is what makes the state survive when the mirror cannot.
   writeMirror(){
+    // Nothing may be mirrored before hydration has finished.
+    //
+    // `Store.load()` seeds a *fresh* filesystem when the mirror is empty or
+    // unparseable, and the OS logs during boot — Log.record calls Store.save().
+    // So without this guard the first boot after a quota failure writes a fresh
+    // empty OS over the only surviving copy, and the next boot has nothing left
+    // to recover. Persisting a state you have not yet established is how a
+    // recovery path destroys what it was recovering.
+    if(!this.bootDone){ this._mirrorPending = true; return false; }
     try{
       localStorage.setItem(Store.KEY, JSON.stringify(Store.data));
       this.lsHealthy = true;
@@ -82,6 +93,12 @@ const Persist = {
       this.lastError = "mirror quota: " + String(e && e.name || e);
       return false;
     }
+  },
+
+  // Called once hydration has had its say, whether it adopted anything or not.
+  finishBoot(){
+    this.bootDone = true;
+    if(this._mirrorPending){ this._mirrorPending = false; this.writeMirror(); }
   },
 
   // ---- write-behind --------------------------------------------------------
@@ -115,8 +132,14 @@ const Persist = {
   // state. IndexedDB is consulted only to *improve* on it, never to replace it
   // blindly: an older database must not undo work done this session.
   async hydrate(){
+    // Deliberately no "flush pending writes first" step. It looks safer and is
+    // the opposite: at boot the OS logs, which marks the store dirty, and
+    // flushing that against a seeded-empty filesystem overwrites the good
+    // record in the database before it has even been read. The pending write
+    // is protected instead by comparing against Store.rev below — in-memory
+    // state is the authority on "what does this session already have".
     const db = await this.open();
-    if(!db) return { adopted:false, reason:"no IndexedDB" };
+    if(!db){ this.finishBoot(); return { adopted:false, reason:"no IndexedDB" }; }
     let rec = null;
     try{
       rec = await new Promise((res, rej)=>{
@@ -124,31 +147,42 @@ const Persist = {
         g.onsuccess = ()=>res(g.result || null);
         g.onerror   = ()=>rej(new Error("get failed"));
       });
-    }catch(e){ this.lastError = "hydrate read failed"; return { adopted:false, reason:"read failed" }; }
-    if(!rec || !rec.data || !rec.data.vfs) return { adopted:false, reason:"empty" };
+    }catch(e){ this.lastError = "hydrate read failed"; this.finishBoot(); return { adopted:false, reason:"read failed" }; }
+    if(!rec || !rec.data || !rec.data.vfs){ this.finishBoot(); return { adopted:false, reason:"empty" }; }
 
-    const localRev = Store.rev || 0;
     const idbRev = rec.rev || 0;
 
-    // Adopt only when the database is strictly ahead of what the mirror
-    // demonstrably holds. That single comparison covers every real case:
+    // Two independent questions, and conflating them is what made the first
+    // version of this wrong.
     //
-    //   mirror missing / cleared   -> mirrorRev 0, database wins
-    //   mirror over quota          -> MIRROR_KEY never advanced, database wins
-    //   ordinary reload            -> mirrorRev == idbRev, nothing to do
-    //   edits made this session    -> localRev > idbRev, database ignored
+    // 1. Does the mirror hold anything real? MIRROR_KEY only advances after a
+    //    write that actually landed, so mirrorRev === 0 means the mirror is
+    //    missing, unreadable, or was over quota. Then the database is the only
+    //    copy and it wins, regardless of revision arithmetic.
     //
-    // Getting this backwards would undo the user's most recent work on boot,
-    // so equality is deliberately treated as "nothing to gain".
-    if(idbRev <= localRev) return { adopted:false, reason:idbRev < localRev ? "database older" : "up to date" };
+    // 2. Is the database ahead of what is in memory *now*? That is the only
+    //    other reason to swap, and it covers a crash between the database write
+    //    and the mirror write.
+    //
+    // Comparing the database against mirrorRev alone is unsound: writes during
+    // boot are deferred until hydration finishes, so mirrorRev can lag the
+    // database purely because of that deferral, with both holding the same
+    // state. Treating that as "the database is newer" would re-hydrate on
+    // every single boot.
+    const mirrorHoldsNothing = this.mirrorRev === 0;
+    const databaseAhead = idbRev > (Store.rev || 0);
+    if(!(mirrorHoldsNothing || databaseAhead)){
+      this.finishBoot();
+      return { adopted:false, reason:"up to date" };
+    }
 
     Store.data = rec.data;
     Store.rev = idbRev;
     VFS.root = Store.data.vfs;
     this.hydrated = true;
-    this.writeMirror();                     // bring the boot path back in step
+    this.finishBoot();                       // mirrors the adopted state
     Bus.emit("vfs");
-    return { adopted:true, rev:idbRev, reason:this.lsHealthy ? "database newer" : "mirror was broken" };
+    return { adopted:true, rev:idbRev, reason:mirrorHoldsNothing ? "mirror held nothing" : "database ahead of memory" };
   },
 };
 
@@ -205,6 +239,13 @@ if(typeof Cyrus !== "undefined" && Cyrus.onReady){
                 r.adopted ? "Restored the Store from IndexedDB (" + r.reason + ", rev " + r.rev + ")."
                           : "IndexedDB held nothing newer (" + r.reason + ").");
   });
+
+  // Safety valve. If the database never answers — a browser that accepts
+  // indexedDB.open() and then goes quiet — mirroring must not stay blocked
+  // forever, or the OS would silently stop saving altogether. Degrading to the
+  // old behaviour beats losing the user's work.
+  if(typeof setTimeout === "function") setTimeout(()=>{ if(!Persist.bootDone) Persist.finishBoot(); }, 2000);
+
   // Never lose the last few hundred milliseconds to a closed tab.
   if(typeof window !== "undefined") window.addEventListener("pagehide", ()=>{ Persist.flush(); });
 }
