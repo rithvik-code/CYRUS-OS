@@ -147,8 +147,13 @@ async function main() {
   // The promise is "a delete is recoverable". That is only true if the delete
   // itself takes the snapshot, so the wiring is asserted rather than assumed.
   ok(typeof ctx.CMDS.rm.run === "function", "rm is still a shell command");
-  ok(ctx.CMDS.rm.__snapWrapped === true, "rm is wrapped to snapshot before it runs");
-  eq(ctx.CMDS.rm.__snapWrapped, true, "the wrapper is marked so it cannot be double-wrapped");
+  // Which flag marks the wrapper is an implementation detail — phase 17
+  // rewrote rm to be policy-aware and marked its replacement differently. What
+  // has to hold is that a wrapper exists, and that the restore point is really
+  // taken; the latter is asserted by label below, which cannot be faked.
+  const marked = o => !!(o && (o.__snapWrapped || o.__undoWrapped || o.__undoFixed));
+  ok(marked(ctx.CMDS.rm), "rm is wrapped to snapshot before it runs");
+  eq(marked(ctx.CMDS.rm), true, "the wrapper is marked so it cannot be double-wrapped");
 
   // Counting snapshots cannot prove a restore point was taken — retention
   // prunes on every take, so the count stays flat. Assert on the label.
@@ -158,7 +163,7 @@ async function main() {
   ok(await hasSnapLabelled(/rm/), "running rm in the shell took a restore point naming the command");
   eq(VFS.node("/home/rithvik/Documents/notes.txt"), null, "and rm did delete the file");
 
-  ok(ctx.StFS.guard.__snapWrapped === true, "the Studio explorer guard is wrapped");
+  ok(marked(ctx.StFS.guard), "the Studio explorer guard is wrapped");
   await ctx.StFS.guard("delete", "/home/rithvik/Documents/notes.txt", "delete a file");
   ok(await hasSnapLabelled(/delete/), "a medium-risk Studio delete takes a restore point naming the op");
 

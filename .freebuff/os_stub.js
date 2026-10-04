@@ -198,6 +198,27 @@ function makeVFS() {
       if (this && this.host && this.host.Bus) this.host.Bus.emit("vfs");
       return true;
     },
+    // The real VFS has these; without them a test cannot assert on file
+    // contents, which is the only way to tell a faithful restore from a
+    // restore that happened to put the right *names* back.
+    readFile(path) { const n = this.node(path); return n && n.type === "file" ? n.content : null; },
+    writeFile(path, content) {
+      const dir = this.node(this.parent(path));
+      if (!dir || dir.type !== "dir") return false;
+      const name = this.base(path);
+      const dot = name.lastIndexOf(".");
+      const prev = dir.children[name];
+      dir.children[name] = {
+        type: "file", name,
+        ext: dot > 0 ? name.slice(dot + 1) : "",
+        content: String(content),
+        size: String(content).length,
+        mtime: 1700000000000,
+      };
+      if (prev && prev.mtime) dir.children[name].mtime = 1700000000001;
+      if (this && this.host && this.host.Bus) this.host.Bus.emit("vfs");
+      return true;
+    },
     remove(path) {
       const n = this.node(path);
       const dir = this.node(this.parent(path));
@@ -213,8 +234,25 @@ function makeVFS() {
       d.children[this.base(src)] = n;
       return this.remove(src);
     },
-    detach(path) { return this.node(path); },
-    attach() { return true; },
+    // Faithful: the real detach() *removes* the node from its parent and returns
+    // it, and attach() puts it back. Stubbing these as no-ops made a rename
+    // silently do nothing, so a test could assert a rename worked and be wrong.
+    detach(path) {
+      const n = this.node(path);
+      const dir = this.node(this.parent(path));
+      if (!n || !dir || !dir.children) return null;
+      const name = this.base(path);
+      delete dir.children[name];
+      if (this && this.host && this.host.Bus) this.host.Bus.emit("vfs");
+      return n;
+    },
+    attach(parentPath, node) {
+      const dir = this.node(parentPath);
+      if (!dir || dir.type !== "dir" || !node) return false;
+      dir.children[node.name] = node;
+      if (this && this.host && this.host.Bus) this.host.Bus.emit("vfs");
+      return true;
+    },
     walk(path, fn) {
       const start = this.node(path);
       if (!start) return;
@@ -347,6 +385,36 @@ function makeCtx(opts) {
       protected(p) {
         return this.CRITICAL.includes(p) || this.SYSTEM.some(s => p === s || p.startsWith(s + "/"));
       },
+      // The real editor mutators, copied in so the undo wrappers have something
+      // genuine to wrap and the tests can assert on real behaviour.
+      newFile(dir, name) {
+        const p = VFS.norm(dir, name);
+        if (VFS.node(p)) return { ok: false, path: p, err: "already exists" };
+        if (!VFS.writeFile(p, "")) return { ok: false, path: p, err: "cannot create" };
+        ctx.Log.record("studio: new file " + p, "studio_file_op", { op: "newFile", path: p }, "low", false, true, "Created " + p);
+        ctx.Bus.emit("vfs");
+        return { ok: true, path: p };
+      },
+      newFolder(dir, name) {
+        const p = VFS.norm(dir, name);
+        if (VFS.node(p)) return { ok: false, path: p, err: "already exists" };
+        if (!VFS.mkdirp(p)) return { ok: false, path: p, err: "cannot create that folder" };
+        ctx.Log.record("studio: new folder " + p, "studio_file_op", { op: "newFolder", path: p }, "low", false, true, "Created " + p);
+        ctx.Bus.emit("vfs");
+        return { ok: true, path: p };
+      },
+      rename(from, toName) {
+        const to = VFS.norm(VFS.parent(from), toName);
+        if (from === to) return { ok: false, err: "Same name." };
+        if (VFS.node(to)) return { ok: false, err: "already exists here" };
+        const node = VFS.detach(from);
+        if (!node) return { ok: false, err: "Not found." };
+        node.name = toName;
+        VFS.attach(VFS.parent(to), node);
+        ctx.Log.record("studio: rename " + from + " -> " + to, "studio_file_op", { op: "rename", from, to }, "low", false, true, "Renamed");
+        ctx.Bus.emit("vfs");
+        return { ok: true, path: to };
+      },
       // The real guard() enforces the policy: it screens targets with
       // protected(), logs a refusal, and returns false *without* touching the
       // filesystem. A permissive stub made every "does the gate hold?" test
@@ -439,7 +507,7 @@ function load(ctx, file) {
 const OS_BINDINGS = [
   "Cyrus", "Mnt", "BACKENDS", "Bridge", "DiskUsage", "MntPicker",
   "SysProbe", "Snapshots", "MemSnapStore", "snapshotBefore",
-  "Vaults", "Profiles", "Offline", "OllamaDiag", "SearchIndex", "Persist",
+  "Vaults", "Profiles", "Offline", "OllamaDiag", "SearchIndex", "Persist", "Undo",
   "mkFileNode", "mkDirNode", "nodeAt", "ensureDir", "pad",
 ];
 function loadOS(ctx) {
@@ -450,6 +518,7 @@ function loadOS(ctx) {
   load(ctx, "os_p14_offline.js");
   load(ctx, "os_p15_search.js");
   load(ctx, "os_p16_store.js");
+  load(ctx, "os_p17_undo.js");
   for (const name of OS_BINDINGS) {
     const v = vm.runInContext(name, ctx);
     if (v !== undefined) ctx[name] = v;
