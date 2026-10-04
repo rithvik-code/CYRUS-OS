@@ -114,8 +114,11 @@ async function main() {
     // not twelve — and not one, because these are genuinely different folders.
     eq(ctx.Undo.stack.length, 2, "twelve rapid saves collapse, one entry per touched folder");
     ctx.Undo.undo();
-    eq(VFS.readFile("/home/rithvik/Documents/typed.txt"), null,
-       "one undo reverts the whole burst, back to before the file had content");
+    // Coalescing keeps the *oldest* snapshot in a burst, so one undo returns the
+    // file to its first saved value rather than peeling off one character at a
+    // time. "x" (length 1) after twelve writes is the whole point.
+    eq(VFS.readFile("/home/rithvik/Documents/typed.txt"), "x",
+       "one undo reverts the entire burst, not one keystroke of it");
     ctx.Undo.undo();
     eq(VFS.node("/home/rithvik/Documents/typed.txt"), null,
        "the second undo removes the file the burst created");
@@ -136,11 +139,31 @@ async function main() {
   {
     const ctx = mk();
     ctx.Undo.clear();
+    // Coalescing must be off, or these all merge into one entry and the cap is
+    // never reached — which is what a weak version of this test would assert.
+    ctx.Undo.COALESCE_MS = 0;
     for (let i = 0; i < ctx.Undo.LIMIT + 15; i++) {
       ctx.Undo.commit("op " + i, ctx.Undo.capture(["/home/rithvik/Documents"]));
     }
-    ok(ctx.Undo.stack.length <= ctx.Undo.LIMIT,
-       "history is capped: " + ctx.Undo.stack.length + " <= " + ctx.Undo.LIMIT);
+    eq(ctx.Undo.stack.length, ctx.Undo.LIMIT,
+       "history is capped at " + ctx.Undo.LIMIT + " (got " + ctx.Undo.stack.length + ")");
+  }
+
+  // ---- the audit row layout, asserted once so indices cannot drift --------
+  // These tests read Log's record shape positionally. Getting an index wrong
+  // makes a test assert the wrong field and pass anyway, so the shape itself is
+  // pinned down here.
+  {
+    const ctx = mk();
+    ctx.Log.record("u", "shape_probe", { a: 1 }, "low", true, false, "m");
+    const r = ctx.__log[ctx.__log.length - 1];
+    eq(r[0], "u", "column 0 is the user text");
+    eq(r[1], "shape_probe", "column 1 is the intent");
+    eq(r[2], '{"a":1}', "column 2 is the stringified fields");
+    eq(r[3], "low", "column 3 is the risk");
+    eq(r[4], true, "column 4 is confirmed");
+    eq(r[5], false, "column 5 is ok");
+    eq(r[6], "m", "column 6 is the message");
   }
 
   // ---- the terminal now asks, and records what actually happened ----------
@@ -152,7 +175,7 @@ async function main() {
     eq(VFS.node(F), null, "rm deleted the file");
     const row = intents(ctx, "delete_file").pop();
     ok(row, "rm wrote an audit record");
-    eq(row[5], true, "confirmed=true — and this time it is true, because it asked");
+    eq(row[4], true, "confirmed=true — and this time it is true, because it asked");
     eq(row[3], "medium", "at medium risk, exactly as the policy table says");
     ok(intents(ctx, "delete_file").length === 1, "and the shell wrote exactly one audit record for it");
     ok(ctx.__guards.length === 0, "the Studio guard was not involved — the shell has its own path");
@@ -167,7 +190,7 @@ async function main() {
     ctx.Modal.confirm = realConfirm;
     ok(VFS.node(F), "the file survives a cancelled delete");
     const row = intents(ctx, "delete_file").pop();
-    eq(row[5], false, "confirmed=false — the log does not claim a confirmation that never happened");
+    eq(row[4], false, "confirmed=false — the log does not claim a confirmation that never happened");
     ok(/Cancelled/.test(String(row[6])), "and says it was cancelled", row[6]);
   }
 
@@ -213,7 +236,8 @@ async function main() {
     eq(VFS.node("/home/rithvik/Downloads/emptydir"), null, "rmdir removed the empty directory");
     const row = intents(ctx, "delete_file").pop();
     ok(row, "rmdir wrote an audit record — it used to write none at all");
-    eq(row[5], true, "and records the confirmation honestly");
+    eq(row[4], true, "and records the confirmation honestly")
+    eq(row[5], true, "and records the delete as having succeeded");
     ok(/rmdir/.test(String(row[6])), "naming the command", row[6]);
 
     ctx.Undo.undo();

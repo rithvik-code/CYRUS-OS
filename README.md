@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/build-zero-00B894?style=for-the-badge" alt="Zero build">
   <img src="https://img.shields.io/badge/AI-local--first%20%7C%20keyless-6C5CE7?style=for-the-badge" alt="Local-first, keyless AI">
   <img src="https://img.shields.io/badge/actions-policy--gated%20%7C%20audited-E17055?style=for-the-badge" alt="Policy-gated and audited">
-  <img src="https://img.shields.io/badge/tests-34%20safety%20tests-0984E3?style=for-the-badge" alt="34 safety tests">
+  <img src="https://img.shields.io/badge/tests-645%20assertions%20%2B%2034%20python-0984E3?style=for-the-badge" alt="645 assertions plus 34 python tests">
 </p>
 
 <p>
@@ -257,6 +257,25 @@ Five intents, on purpose. Adding a sixth is the wrong next step until these five
 
 > If it's not in `config.yaml`, CYRUS cannot act on it. That's the point.
 
+### Inside the page, the same three promises
+
+The rules above are enforced by the Python layer. The browser OS holds the same line, and three
+recent fixes are worth stating plainly because each one was a real hole rather than a hardening
+suggestion:
+
+- **The policy decides on the path that will be used, not the one you typed.** `StFS.protected()`
+  compared the caller's string as written, so `/home/rithvik/Documents/../../../../` — which
+  resolves to the entire filesystem — was reported as *not* protected, and was then normalised onto
+  `/` on the way to disk. Five such bypasses existed. Every decision is now made after `VFS.norm`.
+- **The shell follows the same rules as the editor.** `rm` recorded `confirmed: true` without ever
+  showing a dialog, `rmdir` deleted with no audit record at all, and neither consulted the
+  protection policy — so the shell could delete `/home/rithvik/Documents`, the one folder the
+  editor guards most carefully. All three now behave.
+- **Your work survives a bad write.** The Store wrote one JSON blob to localStorage inside a bare
+  `try/catch`. Over quota that write throws, the catch swallows it, and the next reload brings up
+  an empty OS with no error anywhere. State is now also written to IndexedDB, and when the
+  localStorage mirror is missing or failed, the database copy is adopted on the next boot.
+
 ## Repository tour
 
 ```text
@@ -267,12 +286,15 @@ CYRUS OS/
 │   ├── validate_regex.js        ← compiles all 85 symbol regexes; a bad one fails the build, not the page
 │   ├── test_fixes.js            ← 90 assertions over the Quick Fix fixers, diagnostics and symbol families
 │   ├── test_conn.js             ← 53 assertions over provider authority: capture, verify, forget, audit secrecy
-│   ├── test_disk.js             ← 51 assertions over the /mnt router: mounts route, everything else does not
+│   ├── test_disk.js             ← 59 assertions over the /mnt router: mounts route, everything else does not
 │   ├── test_system.js           ← 91 assertions that no measurement is ever invented
 │   ├── test_snapshots.js        ← 63 assertions that a delete is genuinely recoverable
 │   ├── test_profiles.js         ← 49 assertions over vault encryption and the Ollama diagnosis
 │   ├── test_search.js           ← 55 assertions that search reads CONTENT, ranks, and stays incremental
-│   ├── os_p1*.js                ← OS phases 10–15 (real disk, system, snapshots, profiles, offline, search)
+│   ├── test_paths.js            ← 80 assertions that the filesystem policy cannot be walked around
+│   ├── test_store.js            ← 44 assertions that the OS survives a reload, including past the quota
+│   ├── test_undo.js             ← 69 assertions that mistakes are reversible and the shell tells the truth
+│   ├── os_p1*.js                ← OS phases 10–17 (real disk, system, snapshots, profiles, offline, search, persistence, undo)
 │   ├── studio_p*.js             ← Studio source chunks, one per phase
 │   ├── sw.js / manifest.webmanifest ← offline shell; needs a served origin
 │   └── cyrus-architecture.html  ← visual map of the layers
@@ -360,6 +382,11 @@ the System app lists them as permanently `not reachable from a browser` rather t
   cannot run that model offline, so CYRUS says "BM25 (lexical, offline)" rather than claiming
   something it cannot do.
 - **The risk table is static.** A table you can read beats a black box with filesystem access.
+- **Undo is a session, not a history.** `Ctrl+Z` walks back destructive work for as long as the
+  page stays open (40 entries, bursts of rapid saves collapsed into one). It is deliberately not
+  persisted: every `Store.save()` serialises the whole OS, so a saved history would tax every
+  write in the system to preserve a few minutes of convenience. For “I need that back from an
+  hour ago”, the Snapshots app is the tool, and it does survive a reload.
 
 ---
 
