@@ -4,6 +4,13 @@
 class StApp {
   constructor(win, opts){
     this.win = win;
+    // The running editor was previously reachable only from inside Studio's own
+    // closures, so nothing outside could ask "what is the user looking at?".
+    // Its buildContext() already reports the file, selection, diagnostics and
+    // enclosing symbol — publishing the instance lets the OS answer that
+    // question for any consumer, without duplicating a single one of those
+    // computations.
+    StApp.instance = this;
     opts = opts || {};
     StSettings.load();
     StExt.seed();

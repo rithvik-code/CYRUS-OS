@@ -76,7 +76,7 @@ const chunks = [
   // first. Each is self-contained otherwise.
   ".freebuff/os_p10_disk.js", ".freebuff/os_p11_system.js", ".freebuff/os_p12_snapshots.js",
   ".freebuff/os_p13_profiles.js", ".freebuff/os_p14_offline.js", ".freebuff/os_p15_search.js",
-  ".freebuff/os_p16_store.js", ".freebuff/os_p17_undo.js"
+  ".freebuff/os_p16_store.js", ".freebuff/os_p17_undo.js", ".freebuff/os_p18_context.js"
 ];
 for (const c of chunks) {
   const body = fs.readFileSync(c, "utf8").replace(/\r\n/g, "\n");

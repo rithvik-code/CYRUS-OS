@@ -323,6 +323,13 @@ function makeCtx(opts) {
     fmtSize: kb => kb >= 1048576 ? (kb / 1048576).toFixed(1) + " GB"
               : kb >= 1024 ? (kb / 1024).toFixed(1) + " MB" : Math.round(kb) + " KB",
     VFS, Store,
+    // The intent action table. Real and mutable — phase 18 decorates it.
+    Actions: {},
+    // The Studio app class, as a context global. In the real OS this is a
+    // top-level class binding in the same script; here the Studio chunks are not
+    // loaded, so without this `typeof StApp` is "undefined" and every editor
+    // assertion silently passes against a null.
+    StApp: null,
     // A real emitter. The no-op version this replaces silently skipped every
     // Bus.on("vfs") invalidation hook, so a test could pass while the real
     // wiring was broken — and could fail for reasons that had nothing to do
@@ -359,7 +366,15 @@ function makeCtx(opts) {
     Toast: { show() {}, error() {} },
     Modal: { confirm: () => Promise.resolve(true), info() {} },
     Apps: { reg: new Map(), register(id, d) { ctx.__apps[id] = d; }, open() {} },
-    WM: { open: () => ({}), close() {} },
+    // Faithful enough to be worth asserting against: the real WM keeps a Map of
+    // open windows and a focus() that marks one. Without those, "which app has
+    // focus" was untestable rather than merely unimplemented.
+    WM: {
+      wins: new Map(),
+      focus(win) { if (win && win.el && win.el.classList) win.el.classList.add("focused"); },
+      open() { return {}; },
+      close() {},
+    },
     CMDS: {
       // The real cyrus-sh defines these in cyrus-os.html, which is not loaded
       // here. The snapshot phase wraps `rm`/`rmdir`, so the stub needs genuine
@@ -512,6 +527,7 @@ const OS_BINDINGS = [
   "Cyrus", "Mnt", "BACKENDS", "Bridge", "DiskUsage", "MntPicker",
   "SysProbe", "Snapshots", "MemSnapStore", "snapshotBefore",
   "Vaults", "Profiles", "Offline", "OllamaDiag", "SearchIndex", "Persist", "Undo",
+  "OSState", "ActionResult",
   "mkFileNode", "mkDirNode", "nodeAt", "ensureDir", "pad",
 ];
 function loadOS(ctx) {
@@ -523,6 +539,7 @@ function loadOS(ctx) {
   load(ctx, "os_p15_search.js");
   load(ctx, "os_p16_store.js");
   load(ctx, "os_p17_undo.js");
+  load(ctx, "os_p18_context.js");
   for (const name of OS_BINDINGS) {
     const v = vm.runInContext(name, ctx);
     if (v !== undefined) ctx[name] = v;
