@@ -19,6 +19,88 @@ const fs = require("fs");
 const vm = require("vm");
 const NL = String.fromCharCode(10);
 
+// ---------------------------------------------------------------------------
+// A minimal but faithful IndexedDB.
+//
+// Faithful in the ways the Store chunk can actually observe a difference:
+// genuinely asynchronous (never a sync callback, so a missing await is a real
+// bug rather than an accident), a real upgrade → success lifecycle, real
+// transaction commit semantics (reads inside a write transaction see its own
+// writes; `oncomplete` fires last), and a structured clone on `put` so a caller
+// cannot mutate the stored object after the fact.
+//
+// It is deliberately able to *fail* — `fake.failWrites` — because the entire
+// reason phase 16 exists is that persistence can fail quietly, and a fake that
+// always succeeds would hide the exact bug it was written to find.
+function makeIDB() {
+  // name -> Map(storeName -> Map(key -> value))
+  const dbs = new Map();
+  const api = {
+    failWrites: false,
+    // data survives across contexts, so a test can simulate a reload by
+    // building a second context over the same fake.
+    _dbs: dbs,
+  };
+  const tick = fn => Promise.resolve().then(fn);
+
+  api.open = function (name, _version) {
+    const req = { onsuccess: null, onerror: null, onupgradeneeded: null, onblocked: null, result: null, error: null };
+    tick(() => {
+      let stores = dbs.get(name);
+      if (!stores) { stores = new Map(); dbs.set(name, stores); }
+      const db = {
+        objectStoreNames: { contains: s => stores.has(s) },
+        createObjectStore(s) { stores.set(s, new Map()); return api._handle(s, stores); },
+        transaction(names, mode) {
+          const list = Array.isArray(names) ? names : [names];
+          const tx = { oncomplete: null, onerror: null, onabort: null, error: null };
+          tx.objectStore = n => api._handle(n, stores);
+          // The commit callback is always last, exactly as in the real thing.
+          tick(() => { if (tx.oncomplete) tx.oncomplete(); });
+          return tx;
+        },
+        close() {},
+      };
+      req.result = db;
+      if (req.onupgradeneeded) req.onupgradeneeded();
+      if (req.onsuccess) req.onsuccess();
+    });
+    return req;
+  };
+
+  api._handle = function (storeName, stores) {
+    const data = stores.get(storeName) || new Map();
+    const settle = (req, value, err) => tick(() => {
+      if (err) { req.error = err; if (req.onerror) req.onerror(); }
+      else { req.result = value; if (req.onsuccess) req.onsuccess(); }
+    });
+    return {
+      // keyPath is "k" throughout this OS.
+      put(v) {
+        const req = {};
+        if (api.failWrites) { settle(req, undefined, new Error("write failed")); return req; }
+        data.set(v.k, JSON.parse(JSON.stringify(v)));   // structured clone
+        settle(req, v.k);
+        return req;
+      },
+      get(k) {
+        const req = {};
+        settle(req, data.has(k) ? JSON.parse(JSON.stringify(data.get(k))) : undefined);
+        return req;
+      },
+      delete(k) {
+        const req = {};
+        if (api.failWrites) { settle(req, undefined, new Error("delete failed")); return req; }
+        data.delete(k);
+        settle(req, undefined);
+        return req;
+      },
+      clear() { data.clear(); },
+    };
+  };
+  return api;
+}
+
 let pass = 0, fail = 0;
 const failures = [];
 function ok(cond, name, detail) {
@@ -143,13 +225,17 @@ function makeCtx(opts) {
   const timers = [];
   const VFS = makeVFS();
   const Store = {
+    // The real Store persists under this key; phase 16 mirrors to it.
+    KEY: "cyrus_os_v2",
     data: { vfs: VFS.root, log: [], settings: { accent: "#d4a53f" }, notes: {} },
     saves: 0,
     save() { Store.saves++; },
     reset() {},
   };
   const store = {};
-  const local = {};
+  // `opts.local` lets a test hand the *same* backing map to a second context,
+  // which is how a reload is simulated: new Store, same durable storage.
+  const local = opts.local || {};
   const session = {};
 
   const ctx = {
@@ -255,7 +341,21 @@ function makeCtx(opts) {
     defaultSettings: () => ({ accent: "#d4a53f" }),
     // ---- browser globals ----
     location: opts.location || { protocol: "http:", host: "localhost:8791", port: "8791", origin: "http://localhost:8791", href: "http://localhost:8791/.freebuff/cyrus-os.html" },
-    localStorage: { getItem: k => (k in local ? local[k] : null), setItem: (k, v) => { local[k] = String(v); }, removeItem: k => { delete local[k]; } },
+    localStorage: {
+      getItem: k => (k in local ? local[k] : null),
+      // `opts.lsQuota` reproduces the real ceiling. The base Store.save()
+      // swallows this error, which is precisely the failure phase 16 must
+      // detect — so the fake has to be able to raise it.
+      setItem(k, v) {
+        if (opts.lsQuota && String(v).length > opts.lsQuota) {
+          const e = new Error("QuotaExceededError");
+          e.name = "QuotaExceededError";
+          throw e;
+        }
+        local[k] = String(v);
+      },
+      removeItem: k => { delete local[k]; },
+    },
     sessionStorage: { getItem: k => (k in session ? session[k] : null), setItem: (k, v) => { session[k] = String(v); }, removeItem: k => { delete session[k]; } },
     document: opts.document || {
       createElement: () => ({ style: {}, setAttribute() {}, removeAttribute() {}, appendChild() {}, addEventListener() {}, querySelector: () => null, querySelectorAll: () => [] }),
@@ -272,7 +372,9 @@ function makeCtx(opts) {
     screen: { width: 1920, height: 1080 },
     devicePixelRatio: 2,
     performance: opts.performance || {},
-    indexedDB: undefined,
+    // `opts.idb` — pass a makeIDB() instance to share one database across
+    // contexts (a reload), or `false` to model a runtime without IndexedDB.
+    indexedDB: opts.idb === false ? undefined : (opts.idb || makeIDB()),
     crypto: opts.crypto,
     URL, Blob: class {}, fetch: opts.fetch || (async () => { throw new Error("no network in tests"); }),
     __log: [], __apps: {}, __guards: [], __timers: timers,
@@ -301,7 +403,7 @@ function load(ctx, file) {
 const OS_BINDINGS = [
   "Cyrus", "Mnt", "BACKENDS", "Bridge", "DiskUsage", "MntPicker",
   "SysProbe", "Snapshots", "MemSnapStore", "snapshotBefore",
-  "Vaults", "Profiles", "Offline", "OllamaDiag", "SearchIndex",
+  "Vaults", "Profiles", "Offline", "OllamaDiag", "SearchIndex", "Persist",
   "mkFileNode", "mkDirNode", "nodeAt", "ensureDir", "pad",
 ];
 function loadOS(ctx) {
@@ -311,6 +413,7 @@ function loadOS(ctx) {
   load(ctx, "os_p13_profiles.js");
   load(ctx, "os_p14_offline.js");
   load(ctx, "os_p15_search.js");
+  load(ctx, "os_p16_store.js");
   for (const name of OS_BINDINGS) {
     const v = vm.runInContext(name, ctx);
     if (v !== undefined) ctx[name] = v;
@@ -318,4 +421,4 @@ function loadOS(ctx) {
   return ctx;
 }
 
-module.exports = { ok, eq, report, makeCtx, load, loadOS, mkFile, mkDir, seedTree, pass: () => pass, fail: () => fail, NL };
+module.exports = { ok, eq, report, makeCtx, makeIDB, load, loadOS, mkFile, mkDir, seedTree, pass: () => pass, fail: () => fail, NL };
